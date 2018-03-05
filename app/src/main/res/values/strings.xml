@@ -1,0 +1,30 @@
+<resources>
+    <!-- resolve @id/visible error -->
+    <item name="visible" type="id"/>
+    <item name="masked" type="id"/>
+
+    <string name="app_name">MobileCapstone</string>
+    <string name="title_activity_home">HomeActivity</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <!-- context menu labels in vietnamese-->
+    <string name="action_settings">Cài đặt</string>
+    <string name="action_logout">Đăng xuất</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_maps">Map</string>
+    <!-- register screen labels in vietnamese-->
+    <string name="register_username">Tên tài khoản</string>
+    <string name="register_password">Mật khẩu</string>
+    <string name="register_fullname">Họ tên</string>
+    <string name="register_Birthdate">Ngày sinh</string>
+    <string name="register_btn_submit">Đăng ký</string>
+    <string name="register_login_link">Đăng nhập tại đây</string>
+    <!-- login screen labels in vietnamese-->
+    <string name="login_username">Tên tài khoản</string>
+    <string name="login_password">Mật khẩu</string>
+    <string name="login_btn_submit">Đăng nhập</string>
+    <string name="login_register_link">Đăng ký tài khoản mới tại đây</string>
+    <!-- map screen labels in vietnamese-->
+    <string name="map_btn_search">Hãy chọn điểm đến</string>
+</resources>

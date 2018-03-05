@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/CapstoneMobile.iml" filepath="$PROJECT_DIR$/CapstoneMobile.iml" />
+      <module fileurl="file://D:\FU\SP2018\Capstone\Capstone_android\CapstoneMobile.iml" filepath="D:\FU\SP2018\Capstone\Capstone_android\CapstoneMobile.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+    </modules>
+  </component>
+</project>
