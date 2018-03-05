@@ -12,6 +12,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.R;
 
 import org.json.JSONObject;
@@ -101,7 +102,7 @@ public class RegisterActivity extends AppCompatActivity {
         protected String doInBackground(String... strings) {
             try {
 
-                URL url = new URL("http://192.168.1.6:57305/api/User/CreateAccount?username="+username+"&password="+password+"&roleId=2&fullname="+fullname+"&birthday="+DoB+"&active=true"); //
+                URL url = new URL("http://" + sharedData.IP+":57305/api/User/CreateAccount?username="+username+"&password="+password+"&roleId=2&fullname="+fullname+"&birthday="+DoB+"&active=true"); //
                 Log.e(TAG, "doInBackground:" + url.toString());
                 JSONObject postDataParams = new JSONObject();
                 postDataParams.put("Username", username);

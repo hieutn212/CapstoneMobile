@@ -22,6 +22,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Data.DeviceInfo;
+import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.R;
 import com.example.project.mobilecapstone.Utils.CreatePosition;
 import com.example.project.mobilecapstone.Utils.GPSRouter;
@@ -65,7 +66,7 @@ public class LoginActivity extends AppCompatActivity {
         else {
             requestReadPhoneStatePermission();
         }
-        new CreatePosition().execute();
+        new CreatePosition(this).execute();
         Intent intent = new Intent(this, PositionService.class);
         startService(intent);
     }
@@ -133,7 +134,7 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... strings) {
             try {
-                URL url = new URL("http://192.168.1.6:57305/api/User/Get?username=" + username + "&password=" + password);
+                URL url = new URL("http://"+ sharedData.IP+":57305/api/User/Get?username=" + username + "&password=" + password);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();

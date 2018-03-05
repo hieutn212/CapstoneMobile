@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.example.project.mobilecapstone.Data.DeviceInfo;
+import com.example.project.mobilecapstone.Data.sharedData;
 
 import org.json.JSONObject;
 
@@ -26,22 +27,39 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class CreatePosition extends AsyncTask<String, Void, String> {
 
-    private Context context;
-    private GPSRouter gps;
+    private Context contexts;
+    double latitude;
+    double longitude;
+    double altitude;
     DeviceInfo device = new DeviceInfo();
     private static final String TAG = "CreatePosition";
+    GPSRouter gps;
+
+    public CreatePosition(Context context) {
+        this.contexts = context;
+    }
+
+    void getLocationGPS() {
+        gps = new GPSRouter(contexts);
+        if (gps.canGetLocation()) {
+            latitude = gps.getLatitude();
+            longitude = gps.getLongitude();
+            altitude = gps.getAltitude();
+        } else {
+            gps.showSettingAlert();
+        }
+    }
 
     @Override
     protected void onPreExecute() {
-        gps = new GPSRouter(context);
+        getLocationGPS();
     }
 
     @Override
     protected String doInBackground(String... strings) {
         try {
 
-            Log.e(TAG, "doInBackground:" + gps.getLatitude());
-            URL url = new URL("http://192.168.1.6:57305/api/Position/CreateProductPosition?latitude=" + gps.getLatitude() + "&longitude=" + gps.getLongitude() + "&altitude=" + gps.getAltitude() + "&deviceId=" + device.getIMEI()); //
+            URL url = new URL("http://"+ sharedData.IP + ":57305/api/Position/CreateProductPosition?latitude=" + gps.getLatitude() + "&longitude=" + gps.getLongitude() + "&altitude=" + gps.getAltitude() + "&deviceId=" + device.getIMEI()); //
             Log.e(TAG, "doInBackground:" + url.toString());
             JSONObject postDataParams = new JSONObject();
             postDataParams.put("latitude", gps.getLatitude());

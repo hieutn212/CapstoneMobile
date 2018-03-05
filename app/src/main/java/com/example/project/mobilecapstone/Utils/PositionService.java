@@ -21,7 +21,7 @@ public class PositionService extends IntentService {
         while (true) {
             try{
                 Thread.sleep(30000);
-                new CreatePosition().execute();
+                new CreatePosition(this).execute();
             }
             catch (InterruptedException e) {
                 e.printStackTrace();
