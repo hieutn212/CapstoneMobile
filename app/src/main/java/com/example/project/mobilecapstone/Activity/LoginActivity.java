@@ -138,7 +138,6 @@ public class LoginActivity extends AppCompatActivity {
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
-                //arr.add("" + responseCode+ "a");
                 final StringBuilder output = new StringBuilder("Request URL " + url);
                 output.append(System.getProperty("line.separator") + "Response Code " + responseCode);
                 output.append(System.getProperty("line.separator") + "Type " + "GET");
@@ -149,7 +148,7 @@ public class LoginActivity extends AppCompatActivity {
                     responseOutput.append(line);
                 }
                 //logging
-                Log.e(TAG, "doInBackground: " + responseOutput.toString());
+                Log.e(TAG, "doInBackground: CheckLogin" + responseOutput.toString());
                 br.close();
                 output.append(System.getProperty("line.separator") + "Response " + System.getProperty("line.separator") + System.getProperty("line.separator") + responseOutput.toString());
                 if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -174,21 +173,17 @@ public class LoginActivity extends AppCompatActivity {
                     });
                 }
             } catch (MalformedURLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                Log.e(TAG, "doInBackground: CheckLogin" + e);
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                Log.e(TAG, "doInBackground: CheckLogin" + e);
             } catch (JSONException e) {
-                e.printStackTrace();
+                Log.e(TAG, "doInBackground: CheckLogin" + e);
             }
             return null;
         }
 
         @Override
         protected void onPostExecute(String s) {
-            //Toast.makeText(LoginActivity.this, s, Toast.LENGTH_LONG).show();
-
         }
     }
 
