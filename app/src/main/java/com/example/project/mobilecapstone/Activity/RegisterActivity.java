@@ -132,15 +132,6 @@ public class RegisterActivity extends AppCompatActivity {
                             InputStreamReader(
                             conn.getInputStream()));
 
-                    StringBuffer sb = new StringBuffer("");
-                    String line = "";
-
-                    while ((line = in.readLine()) != null) {
-
-                        sb.append(line);
-                        break;
-                    }
-
                     in.close();
                     runOnUiThread(new Runnable() {
                         @Override
