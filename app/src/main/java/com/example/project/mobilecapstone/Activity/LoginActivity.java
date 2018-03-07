@@ -61,7 +61,6 @@ public class LoginActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             getImeiDevice();
             device.setIMEI(imeiDevice);
-            Log.e(TAG, "DeviceIMEI: -" + imeiDevice +"---" + device.getIMEI());
         }
         else {
             requestReadPhoneStatePermission();
@@ -109,8 +108,6 @@ public class LoginActivity extends AppCompatActivity {
 
     public void onLoginClick(View view) {
         //TODO: check login before switch activity
-        //Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-        //LoginActivity.this.startActivity(intent);
         new CheckLogin().execute();
     }
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -138,10 +135,6 @@ public class LoginActivity extends AppCompatActivity {
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
-                //arr.add("" + responseCode+ "a");
-                final StringBuilder output = new StringBuilder("Request URL " + url);
-                output.append(System.getProperty("line.separator") + "Response Code " + responseCode);
-                output.append(System.getProperty("line.separator") + "Type " + "GET");
                 BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String line = "";
                 final StringBuilder responseOutput = new StringBuilder();
@@ -149,9 +142,8 @@ public class LoginActivity extends AppCompatActivity {
                     responseOutput.append(line);
                 }
                 //logging
-                Log.e(TAG, "doInBackground: " + responseOutput.toString());
+                Log.e(TAG, "doInBackground: CheckLogin " + responseOutput.toString());
                 br.close();
-                output.append(System.getProperty("line.separator") + "Response " + System.getProperty("line.separator") + System.getProperty("line.separator") + responseOutput.toString());
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     runOnUiThread(new Runnable() {
                         @Override
@@ -187,7 +179,6 @@ public class LoginActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String s) {
-            //Toast.makeText(LoginActivity.this, s, Toast.LENGTH_LONG).show();
 
         }
     }

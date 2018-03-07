@@ -60,13 +60,12 @@ public class CreatePosition extends AsyncTask<String, Void, String> {
         try {
 
             URL url = new URL("http://"+ sharedData.IP + ":57305/api/Position/CreateProductPosition?latitude=" + gps.getLatitude() + "&longitude=" + gps.getLongitude() + "&altitude=" + gps.getAltitude() + "&deviceId=" + device.getIMEI()); //
-            Log.e(TAG, "doInBackground:" + url.toString());
+            Log.e(TAG, "doInBackground-CreatePosition:" + url.toString());
             JSONObject postDataParams = new JSONObject();
             postDataParams.put("latitude", gps.getLatitude());
             postDataParams.put("longitude", gps.getLongitude());
             postDataParams.put("altitude", gps.getAltitude());
             postDataParams.put("deviceId", device.getIMEI());
-            Log.e("params", postDataParams.toString());
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setReadTimeout(15000 /* milliseconds */);
             conn.setConnectTimeout(15000 /* milliseconds */);
@@ -99,7 +98,7 @@ public class CreatePosition extends AsyncTask<String, Void, String> {
                 in.close();
             }
         } catch (Exception e) {
-            Log.e(TAG, "doInBackground: Register Activity", e);
+            Log.e(TAG, "doInBackground-Create Position:", e);
         }
         return null;
     }
