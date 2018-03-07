@@ -27,32 +27,14 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class CreatePosition extends AsyncTask<String, Void, String> {
 
-    private Context contexts;
-    double latitude;
-    double longitude;
-    double altitude;
+    private Context context;
+    private GPSRouter gps;
     DeviceInfo device = new DeviceInfo();
     private static final String TAG = "CreatePosition";
-    GPSRouter gps;
-
-    public CreatePosition(Context context) {
-        this.contexts = context;
-    }
-
-    void getLocationGPS() {
-        gps = new GPSRouter(contexts);
-        if (gps.canGetLocation()) {
-            latitude = gps.getLatitude();
-            longitude = gps.getLongitude();
-            altitude = gps.getAltitude();
-        } else {
-            gps.showSettingAlert();
-        }
-    }
 
     @Override
     protected void onPreExecute() {
-        getLocationGPS();
+        gps = new GPSRouter(context);
     }
 
     @Override
