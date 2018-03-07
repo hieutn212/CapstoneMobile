@@ -133,7 +133,7 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... strings) {
             try {
-                URL url = new URL("http://192.168.1.6:57305/api/User/Get?username=" + username + "&password=" + password);
+                URL url = new URL("http://192.168.1.103:57305/api/User/Get?username=" + username + "&password=" + password);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();

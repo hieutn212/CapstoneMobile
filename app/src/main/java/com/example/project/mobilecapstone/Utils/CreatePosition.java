@@ -41,7 +41,7 @@ public class CreatePosition extends AsyncTask<String, Void, String> {
         try {
 
             Log.e(TAG, "doInBackground:" + gps.getLatitude());
-            URL url = new URL("http://192.168.1.6:57305/api/Position/CreateProductPosition?latitude=" + gps.getLatitude() + "&longitude=" + gps.getLongitude() + "&altitude=" + gps.getAltitude() + "&deviceId=" + device.getIMEI()); //
+            URL url = new URL("http://192.168.1.103:57305/api/Position/CreateProductPosition?latitude=" + gps.getLatitude() + "&longitude=" + gps.getLongitude() + "&altitude=" + gps.getAltitude() + "&deviceId=" + device.getIMEI()); //
             Log.e(TAG, "doInBackground:" + url.toString());
             JSONObject postDataParams = new JSONObject();
             postDataParams.put("latitude", gps.getLatitude());
