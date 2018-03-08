@@ -2,7 +2,7 @@
     <!-- resolve @id/visible error -->
     <item name="visible" type="id"/>
     <item name="masked" type="id"/>
-
+    <item name="viewCanvas" type="id"/>
     <string name="app_name">MobileCapstone</string>
     <string name="title_activity_home">HomeActivity</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>

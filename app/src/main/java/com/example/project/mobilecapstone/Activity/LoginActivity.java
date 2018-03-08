@@ -65,7 +65,7 @@ public class LoginActivity extends AppCompatActivity {
         } else {
             requestReadPhoneStatePermission();
         }
-        new CreatePosition().execute();
+        new CreatePosition(this).execute();
         Intent intent = new Intent(this, PositionService.class);
         startService(intent);
     }
