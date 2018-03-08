@@ -50,6 +50,7 @@ public class MapFragment extends Fragment {
     static int width = 0;
     static int height = 0;
     private static final String TAG = "MapFragment";
+    CanvasMapView canvasMapView;
 //    private String isMoving;
 //    private Sensor mySensor;
 //    private SensorManager SM;
@@ -93,7 +94,7 @@ public class MapFragment extends Fragment {
 //        accelCurrent = SM.GRAVITY_EARTH;
 
         FrameLayout layout = v.findViewById(R.id.canvasView);
-        CanvasMapView canvasMapView = new CanvasMapView(getContext());
+        canvasMapView = new CanvasMapView(getContext());
         canvasMapView.setId(R.id.viewCanvas);
         layout.addView(canvasMapView);
 
@@ -252,7 +253,6 @@ public class MapFragment extends Fragment {
         protected void onProgressUpdate(Double... values) {
             super.onProgressUpdate(values);
 //            CanvasMapView canvasView = activity.findViewById(R.id.canvasView);
-            CanvasMapView canvasMapView = getView().findViewById(R.id.viewCanvas);
             canvasMapView.invalidate();
         }
 
