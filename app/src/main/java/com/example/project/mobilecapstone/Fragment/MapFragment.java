@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.AttributeSet;
@@ -18,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.example.project.mobilecapstone.Data.CalculatorModel;
+import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.R;
 import com.example.project.mobilecapstone.Utils.GPSRouter;
 import com.example.project.mobilecapstone.Utils.Utils;
@@ -40,14 +42,19 @@ public class MapFragment extends Fragment {
 
     private GoogleMap map;
     GPSRouter gps;
-    double latitude;
-    double longitude;
+    static double latitude;
+    static double longitude;
     CalculatorModel calObj = new CalculatorModel();
-    float posX = 0;
-    float posY = 0;
-    int width = 0;
-    int height = 0;
+    static float posX = 0;
+    static float posY = 0;
+    static int width = 0;
+    static int height = 0;
     private static final String TAG = "MapFragment";
+//    private String isMoving;
+//    private Sensor mySensor;
+//    private SensorManager SM;
+//    private float accelLast, accelCurrent, accel, x, y, z;
+//    private float[] values;
 
     public MapFragment() {
 
@@ -57,22 +64,37 @@ public class MapFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         //get location from GPSRouter class
-        gps = new GPSRouter(getContext());
+        Context context = getContext();
+        gps = new GPSRouter(context);
         if (gps.canGetLocation()) {
-            latitude = 10.8530167;
-//            latitude = gps.getLatitude();
-//            longitude = gps.getLongitude();
-            longitude = 106.6296201;
+//            latitude = 10.8530167;
+//            longitude = 106.6296201;
+            latitude = gps.getLatitude();
+            longitude = gps.getLongitude();
         } else {
             gps.showSettingAlert();
         }
+//        //create sensor manager
+//        SM = (SensorManager) context.getSystemService(SENSOR_SERVICE);
+//
+//        //accelerometer sensor
+//        mySensor = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+//
+//        //register sensor listener
+//        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
 
         new CanvasAsyTask().execute();
         getActivity();
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_map, container, false);
+        //assign text view
+
+//        accelLast = SM.GRAVITY_EARTH;
+//        accelCurrent = SM.GRAVITY_EARTH;
+
         FrameLayout layout = v.findViewById(R.id.canvasView);
         CanvasMapView canvasMapView = new CanvasMapView(getContext());
+        canvasMapView.setId(R.id.viewCanvas);
         layout.addView(canvasMapView);
 
         return v;
@@ -82,6 +104,46 @@ public class MapFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
     }
+
+//    @Override
+//    public void onSensorChanged(SensorEvent sensorEvent) {
+//        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+//            values = sensorEvent.values.clone();
+//            x = values[0];
+//            y = values[1];
+//            z = values[2];
+//            accelLast = accelCurrent;
+//            accelCurrent = (float) Math.sqrt(x * x + y * y + z * z);
+//            float delta = accelCurrent - accelLast;
+//            accel = accel * 0.9f + delta;
+//            // Make this higher or lower according to how much
+//            // motion you want to detect
+//            CanvasMapView canvasMapView = this.getView().findViewById(R.id.viewCanvas);
+//            if (accel > 1) {
+//                isMoving = "Moving";
+//                if (gps.canGetLocation()) {
+////                    latitude = gps.getLatitude();
+////                    longitude = gps.getLongitude();
+//                    latitude = 10.8530062;
+//                    longitude = 106.6296201;
+//                } else {
+//                    gps.showSettingAlert();
+//                }
+//                getCurrentPointMap();
+//                Log.e(TAG, "onSensorChanged: moving");
+//                canvasMapView.invalidate();
+//            } else {
+////                canvasMapView.invalidate();
+////                isMoving = "still";
+//            }
+//            Log.e(TAG, "onSensorChanged: still");
+//        }
+//    }
+
+//    @Override
+//    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+//
+//    }
 
     //create View with Canvas for map
     private class CanvasMapView extends View {
@@ -106,8 +168,8 @@ public class MapFragment extends Fragment {
             width = getWidth();
             Bitmap scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
-            if(posX != 0 || posY != 0){
-            canvas.drawCircle(posX, posY, 10, mPaint);
+            if (posX != 0 || posY != 0) {
+                canvas.drawCircle(posX, posY, 10, mPaint);
             }
         }
 
@@ -120,7 +182,46 @@ public class MapFragment extends Fragment {
         }
     }
 
+    public static void getCurrentPointMap() {
+        try {
+            URL url = new URL("http://" + sharedData.IP + ":57305/api/Position/CalculatePosition?floor=" + 1 + "&mapId=" + 1
+                    + "&latitude=" + latitude + "&longitude=" + longitude);
+
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder responseOutput = new StringBuilder();
+                String line = "";
+                while ((line = br.readLine()) != null) {
+                    responseOutput.append(line);
+                }
+                br.close();
+                String json = responseOutput.toString();
+                try {
+                    JSONObject obj = new JSONObject(json).getJSONObject("Room");
+                    posX = Utils.getPixel(width / 12, obj.getInt("PosAX"), obj.getInt("PosBX"));
+                    posY = Utils.getPixel(height / 12, obj.getInt("PosAY"), obj.getInt("PosBY"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (MalformedURLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
     public class CanvasAsyTask extends AsyncTask<Void, Double, Void> {
+
+//        private Activity activity;
+//        public CanvasAsyTask(Activity activity) {
+//            this.activity = activity;
+//        }
 
         @Override
         protected void onPreExecute() {
@@ -130,45 +231,29 @@ public class MapFragment extends Fragment {
 
         @Override
         protected Void doInBackground(Void... params) {
-//
-            try {
-                URL url = new URL("http://192.168.1.103:57305/api/Position/CalculatePosition?floor=" + 1 + "&mapId=" + 1
-                        + "&latitude=" + latitude + "&longitude=" + longitude);
-
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                int responseCode = connection.getResponseCode();
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    StringBuilder responseOutput = new StringBuilder();
-                    String line = "";
-                    while ((line = br.readLine()) != null) {
-                        responseOutput.append(line);
-                    }
-                    br.close();
-                    String json = responseOutput.toString();
-                    try {
-                        JSONObject obj = new JSONObject(json).getJSONObject("Room");
-                        posX = Utils.getPixel(width,obj.getInt("PosAX"),obj.getInt("PosBX"));
-                        posY = Utils.getPixel(width,obj.getInt("PosAY"),obj.getInt("PosBY"));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+            while (true) {
+                SystemClock.sleep(1000);
+                if (gps.canGetLocation()) {
+                    latitude = gps.getLatitude();
+                    longitude = gps.getLongitude();
+//                    latitude = 10.8530167;
+//                    longitude = 106.6296201;
+                } else {
+                    gps.showSettingAlert();
                 }
-            } catch (MalformedURLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                getCurrentPointMap();
+                publishProgress();
             }
-            return null;
+//            return null;
         }
 
         @SuppressLint("WrongCall")
         @Override
         protected void onProgressUpdate(Double... values) {
             super.onProgressUpdate(values);
+//            CanvasMapView canvasView = activity.findViewById(R.id.canvasView);
+            CanvasMapView canvasMapView = getView().findViewById(R.id.viewCanvas);
+            canvasMapView.invalidate();
         }
 
         @Override

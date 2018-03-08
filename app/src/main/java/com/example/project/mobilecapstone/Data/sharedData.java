@@ -5,5 +5,5 @@ package com.example.project.mobilecapstone.Data;
  */
 
 public class sharedData {
-    public static final String IP = "192.168.1.101";
+    public static final String IP = "192.168.1.102";
 }
