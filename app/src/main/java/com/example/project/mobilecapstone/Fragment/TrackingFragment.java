@@ -169,21 +169,13 @@ public class TrackingFragment extends Fragment {
     public class CreateProduct extends AsyncTask<String, Void, String> {
 
         protected void onPreExecute() {
-            //final Dialog dialog = new Dialog(getActivity());
-            //String IMEI = dialog.findViewById(R.id.txtIMEI).toString();
-            //String name = dialog.findViewById(R.id.txtName).toString();
         }
 
         protected String doInBackground(String... arg0) {
 
             try {
                 URL url = new URL("http://" + sharedData.IP +":57305/api/device/CreateProduct?IMEI=" + IMEI + "&name=" + name + "&userId=" + userId); // here is your URL path
-                Log.e(TAG, "doInBackground:" + url.toString());
-//                URL url = new URL("http://192.168.1.3:57305/api/device/CreateProduct?IMEI=test&name=abc&userId=2");
-//                JSONObject postDataParams = new JSONObject();
-//                postDataParams.put("name", "abc");
-//                postDataParams.put("email", "abc@gmail.com");
-//                Log.e("params",postDataParams.toString());
+                Log.e(TAG, "doInBackground-CreateProduct:" + url.toString());
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setReadTimeout(15000 /* milliseconds */);
                 conn.setConnectTimeout(15000 /* milliseconds */);
@@ -191,12 +183,6 @@ public class TrackingFragment extends Fragment {
                 conn.setDoInput(true);
                 conn.setDoOutput(true);
                 OutputStream os = conn.getOutputStream();
-//                BufferedWriter writer = new BufferedWriter(
-//                        new OutputStreamWriter(os, "UTF-8"));
-////                writer.write(getPostDataString(postDataParams));
-//
-//                writer.flush();
-//                writer.close();
                 os.close();
                 int responseCode = conn.getResponseCode();
                 if (responseCode == HttpsURLConnection.HTTP_OK) {
@@ -244,10 +230,7 @@ public class TrackingFragment extends Fragment {
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
-                //arr.add("" + responseCode+ "a");
-                final StringBuilder output = new StringBuilder("Request URL " + url);
-                output.append(System.getProperty("line.separator") + "Response Code " + responseCode);
-                output.append(System.getProperty("line.separator") + "Type " + "GET");
+
                 BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String line = "";
                 StringBuilder responseOutput = new StringBuilder();
@@ -255,14 +238,12 @@ public class TrackingFragment extends Fragment {
                     responseOutput.append(line);
                 }
                 br.close();
-                //arr.add(responseOutput.toString());
                 try {
                     convertToArray(responseOutput.toString());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                Log.e(TAG, "doInBackground: " + arr.toString());
-                output.append(System.getProperty("line.separator") + "Response " + System.getProperty("line.separator") + System.getProperty("line.separator") + responseOutput.toString());
+                Log.e(TAG, "doInBackground-getListDevice: " + arr.toString() + "-" + responseCode);
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -310,23 +291,16 @@ public class TrackingFragment extends Fragment {
                 connection.setDoInput(true);
                 connection.setDoOutput(true);
                 int responseCode = connection.getResponseCode();
-                //arr.add("" + responseCode+ "a");
-                final StringBuilder output = new StringBuilder("Request URL " + url);
-                output.append(System.getProperty("line.separator") + "Response Code " + responseCode);
-                output.append(System.getProperty("line.separator") + "Type " + "GET");
                 Log.e(TAG, "doInBackground:" + responseCode);
 
                 BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                Log.e(TAG, "abcccccc: " + br.toString());
-
                 String line = "";
                 responseOutput = new StringBuilder();
                 while ((line = br.readLine()) != null) {
                     responseOutput.append(line);
                 }
                 br.close();
-                Log.e(TAG, "doInBackground: " + responseOutput.toString());
-                output.append(System.getProperty("line.separator") + "Response " + System.getProperty("line.separator") + System.getProperty("line.separator") + responseOutput.toString());
+                Log.e(TAG, "doInBackground-getLocation: " + responseOutput.toString());
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

@@ -61,12 +61,11 @@ public class LoginActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             getImeiDevice();
             device.setIMEI(imeiDevice);
-            Log.e(TAG, "DeviceIMEI: -" + imeiDevice +"---" + device.getIMEI());
-        }
-        else {
+            Log.e(TAG, "DeviceIMEI: -" + imeiDevice + "---" + device.getIMEI());
+        } else {
             requestReadPhoneStatePermission();
         }
-        new CreatePosition(this).execute();
+        new CreatePosition().execute();
         Intent intent = new Intent(this, PositionService.class);
         startService(intent);
     }
@@ -93,11 +92,11 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == 3){
-            if (grantResults.length>0&& grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                Toast.makeText(this,"thank you",Toast.LENGTH_SHORT);
-            }else{
-                Toast.makeText(this,"Denied permission to use internet",Toast.LENGTH_SHORT);
+        if (requestCode == 3) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "thank you", Toast.LENGTH_SHORT);
+            } else {
+                Toast.makeText(this, "Denied permission to use internet", Toast.LENGTH_SHORT);
             }
         }
     }
@@ -113,8 +112,9 @@ public class LoginActivity extends AppCompatActivity {
         //LoginActivity.this.startActivity(intent);
         new CheckLogin().execute();
     }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public void getImeiDevice(){
+    public void getImeiDevice() {
         TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
         if (ActivityCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
@@ -134,7 +134,7 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... strings) {
             try {
-                URL url = new URL("http://"+ sharedData.IP+":57305/api/User/Get?username=" + username + "&password=" + password);
+                URL url = new URL("http://" + sharedData.IP + ":57305/api/User/Get?username=" + username + "&password=" + password);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
