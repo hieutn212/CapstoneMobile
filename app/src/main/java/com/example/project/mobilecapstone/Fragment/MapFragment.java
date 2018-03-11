@@ -18,12 +18,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.example.project.mobilecapstone.Data.CalculatorModel;
 import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.R;
 import com.example.project.mobilecapstone.Utils.GPSRouter;
 import com.example.project.mobilecapstone.Utils.Utils;
-import com.google.android.gms.maps.GoogleMap;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,11 +38,10 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class MapFragment extends Fragment {
 
-    private GoogleMap map;
+    public boolean stopTask = false;
     GPSRouter gps;
     static double latitude;
     static double longitude;
-    CalculatorModel calObj = new CalculatorModel();
     static float posX = 0;
     static float posY = 0;
     static int width = 0;
@@ -84,7 +81,7 @@ public class MapFragment extends Fragment {
 //        //register sensor listener
 //        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
 
-        new CanvasAsyTask().execute();
+        new CanvasAsyTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         getActivity();
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_map, container, false);
@@ -97,7 +94,6 @@ public class MapFragment extends Fragment {
         canvasMapView = new CanvasMapView(getContext());
         canvasMapView.setId(R.id.viewCanvas);
         layout.addView(canvasMapView);
-
         return v;
     }
 
@@ -233,12 +229,12 @@ public class MapFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... params) {
             while (true) {
-                SystemClock.sleep(1000);
+                SystemClock.sleep(3000);
                 if (gps.canGetLocation()) {
                     latitude = gps.getLatitude();
                     longitude = gps.getLongitude();
-//                    latitude = 10.8530167;
-//                    longitude = 106.6296201;
+//                    latitude = 10.8529373;
+//                    longitude = 106.6294958;
                 } else {
                     gps.showSettingAlert();
                 }
