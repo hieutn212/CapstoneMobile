@@ -2,6 +2,7 @@ package com.example.project.mobilecapstone.Utils;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.os.AsyncTask;
 
 /**
  * Created by admin on 3/4/2018.
@@ -21,7 +22,7 @@ public class PositionService extends IntentService {
         while (true) {
             try{
                 Thread.sleep(30000);
-                new CreatePosition(this).execute();
+                new CreatePosition(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
             catch (InterruptedException e) {
                 e.printStackTrace();
