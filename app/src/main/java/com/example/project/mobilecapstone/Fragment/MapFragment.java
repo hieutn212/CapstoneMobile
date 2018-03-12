@@ -80,8 +80,8 @@ public class MapFragment extends Fragment {
 //
 //        //register sensor listener
 //        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
-
-        new CanvasAsyTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            this.getArguments();
+        new CanvasAsyTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         getActivity();
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_map, container, false);
@@ -215,6 +215,11 @@ public class MapFragment extends Fragment {
 
     public class CanvasAsyTask extends AsyncTask<Void, Double, Void> {
 
+        private Fragment fragment;
+
+        public CanvasAsyTask(Fragment fragment) {
+            this.fragment = fragment;
+        }
 //        private Activity activity;
 //        public CanvasAsyTask(Activity activity) {
 //            this.activity = activity;
@@ -223,12 +228,12 @@ public class MapFragment extends Fragment {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-
         }
 
         @Override
         protected Void doInBackground(Void... params) {
             while (true) {
+                Bundle bundle = fragment.getArguments();
                 SystemClock.sleep(3000);
                 if (gps.canGetLocation()) {
                     latitude = gps.getLatitude();
