@@ -6,6 +6,9 @@ package com.example.project.mobilecapstone.Utils;
 
 public class Utils {
     public static float getPixel(int x, int a, int b) {
-        return x * a + x * b;
+        if (b == 0) {
+            return x * a;
+        }
+        return (x * a) + (x / b);
     }
 }
