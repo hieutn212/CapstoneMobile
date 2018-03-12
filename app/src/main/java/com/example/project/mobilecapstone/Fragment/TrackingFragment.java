@@ -315,12 +315,12 @@ public class TrackingFragment extends Fragment {
         protected void onPostExecute(String s) {
             try {
                 String device = responseOutput.toString();
-                String latitude = new JSONObject(device).getString("Latitude").toString();
-                String longitude = new JSONObject(device).getString("Longitude").toString();
+                double latitude = new JSONObject(device).getDouble("Latitude");
+                double longitude = new JSONObject(device).getDouble("Longitude");
                 Log.e(TAG, "onPostExecute: " + latitude + longitude);
                 Bundle bundle = new Bundle();
-                bundle.putString("LAT", latitude);
-                bundle.putString("LONG", longitude);
+                bundle.putDouble("LAT", latitude);
+                bundle.putDouble("LONG", longitude);
 
                 android.support.v4.app.FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                 android.support.v4.app.FragmentTransaction transaction = fragmentManager.beginTransaction();
