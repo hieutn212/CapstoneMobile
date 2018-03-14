@@ -193,7 +193,7 @@ public class MapFragment extends Fragment {
         }
     }
 
-    public static void getPointMap(double latitude, double longitude, float x, float y) {
+    public static void getPointMap(double latitude, double longitude, boolean isDevice) {
         try {
             URL url = new URL("http://" + sharedData.IP + ":57305/api/Position/CalculatePosition?floor=" + 1 + "&mapId=" + 1
                     + "&latitude=" + latitude + "&longitude=" + longitude);
@@ -212,8 +212,13 @@ public class MapFragment extends Fragment {
                 String json = responseOutput.toString();
                 try {
                     JSONObject obj = new JSONObject(json).getJSONObject("Room");
-                    x = Utils.getPixel(width / 12, obj.getInt("PosAX"), obj.getInt("PosBX"));
-                    y = Utils.getPixel(height / 12, obj.getInt("PosAY"), obj.getInt("PosBY"));
+                    if (isDevice == false) {
+                        posX = Utils.getPixel(width / 12, obj.getInt("PosAX"), obj.getInt("PosBX"));
+                        posY = Utils.getPixel(height / 12, obj.getInt("PosAY"), obj.getInt("PosBY"));
+                    } else {
+                        devicePosX = Utils.getPixel(width / 12, obj.getInt("PosAX"), obj.getInt("PosBX"));
+                        devicePosY = Utils.getPixel(height / 12, obj.getInt("PosAY"), obj.getInt("PosBY"));
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -247,7 +252,7 @@ public class MapFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... params) {
             while (true) {
-                SystemClock.sleep(3000);
+                SystemClock.sleep(6000);
                 Bundle bundle = fragment.getArguments();
                 if (bundle != null) {
                     deviceLat = bundle.getDouble("LAT");
@@ -261,9 +266,9 @@ public class MapFragment extends Fragment {
                 } else {
                     gps.showSettingAlert();
                 }
-                getPointMap(latitude, longitude, posX, posY);
+                getPointMap(latitude, longitude, false);
                 if (devicePosX != 0 || devicePosY != 0) {
-                    getPointMap(deviceLat, deviceLong, devicePosX, devicePosY);
+                    getPointMap(deviceLat, deviceLong, true);
                 }
                 publishProgress();
             }
