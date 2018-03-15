@@ -2,6 +2,7 @@ package com.example.project.mobilecapstone.Activity;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,6 +19,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -47,6 +50,7 @@ public class LoginActivity extends AppCompatActivity {
     DeviceInfo device = new DeviceInfo();
     private static final String TAG = "LoginActivity";
     private GPSRouter gps;
+    Button btn_ip;
 
     @TargetApi(Build.VERSION_CODES.O)
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -65,6 +69,38 @@ public class LoginActivity extends AppCompatActivity {
         } else {
             requestReadPhoneStatePermission();
         }
+        btn_ip = LoginActivity.this.findViewById(R.id.btn_login);
+        btn_ip.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                final Dialog dialog = new Dialog(LoginActivity.this);
+                dialog.setCancelable(true);
+                dialog.setContentView(R.layout.dialog_change_ip);
+                //window manager to set dialog attributes
+                WindowManager.LayoutParams params = new WindowManager.LayoutParams();
+                params.copyFrom(dialog.getWindow().getAttributes());
+                params.width = WindowManager.LayoutParams.MATCH_PARENT;
+
+                final EditText txtIP = dialog.findViewById(R.id.txtIP);
+                Button btn_ip = dialog.findViewById(R.id.btn_set_ip);
+                btn_ip.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        sharedData.IP = txtIP.getText().toString();
+                        dialog.dismiss();
+                    }
+                });
+                dialog.show();
+                return true;
+            }
+        });
+        btn_ip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LoginCheck();
+            }
+        });
+
         new CreatePosition(this).execute();
         Intent intent = new Intent(this, PositionService.class);
         startService(intent);
@@ -106,7 +142,7 @@ public class LoginActivity extends AppCompatActivity {
         LoginActivity.this.startActivity(intent);
     }
 
-    public void onLoginClick(View view) {
+    public void LoginCheck() {
         //TODO: check login before switch activity
         //Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
         //LoginActivity.this.startActivity(intent);
@@ -123,6 +159,10 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    /*public void onChangeIPClick(View view) {
+
+    }*/
+
     public class CheckLogin extends AsyncTask<String, Void, String> {
 
         @Override
@@ -135,6 +175,7 @@ public class LoginActivity extends AppCompatActivity {
         protected String doInBackground(String... strings) {
             try {
                 URL url = new URL("http://" + sharedData.IP + ":57305/api/User/Get?username=" + username + "&password=" + password);
+                Log.e(TAG, "doInBackground: Login url" +sharedData.IP );
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
@@ -186,6 +227,4 @@ public class LoginActivity extends AppCompatActivity {
         protected void onPostExecute(String s) {
         }
     }
-
-
 }
