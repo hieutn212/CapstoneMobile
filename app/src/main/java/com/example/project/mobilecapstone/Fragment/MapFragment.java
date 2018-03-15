@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.R;
@@ -44,6 +45,11 @@ public class MapFragment extends Fragment {
     static double longitude;
     static float posX = 0;
     static float posY = 0;
+    static double deviceLat = 0;
+    static double deviceLong = 0;
+    static float devicePosX = 0;
+    static float devicePosY = 0;
+
     static int width = 0;
     static int height = 0;
     private static final String TAG = "MapFragment";
@@ -80,7 +86,7 @@ public class MapFragment extends Fragment {
 //
 //        //register sensor listener
 //        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
-            this.getArguments();
+        this.getArguments();
         new CanvasAsyTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         getActivity();
         // Inflate the layout for this fragment
@@ -166,8 +172,16 @@ public class MapFragment extends Fragment {
             Bitmap scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
             if (posX != 0 || posY != 0) {
+                mPaint.setColor(Color.BLUE);
                 canvas.drawCircle(posX, posY, 10, mPaint);
             }
+            if (devicePosX != 0 || devicePosY != 0) {
+                mPaint.setColor(Color.GREEN);
+                canvas.drawCircle(devicePosX, devicePosY, 10, mPaint);
+            }
+            Toast.makeText(this.getContext(), "Your location is - \nLat: " +
+                            latitude + "\nLong: " + longitude,
+                    Toast.LENGTH_LONG).show();
         }
 
         private void initPaint() {
@@ -179,7 +193,7 @@ public class MapFragment extends Fragment {
         }
     }
 
-    public static void getCurrentPointMap() {
+    public static void getPointMap(double latitude, double longitude, boolean isDevice) {
         try {
             URL url = new URL("http://" + sharedData.IP + ":57305/api/Position/CalculatePosition?floor=" + 1 + "&mapId=" + 1
                     + "&latitude=" + latitude + "&longitude=" + longitude);
@@ -198,8 +212,13 @@ public class MapFragment extends Fragment {
                 String json = responseOutput.toString();
                 try {
                     JSONObject obj = new JSONObject(json).getJSONObject("Room");
-                    posX = Utils.getPixel(width / 12, obj.getInt("PosAX"), obj.getInt("PosBX"));
-                    posY = Utils.getPixel(height / 12, obj.getInt("PosAY"), obj.getInt("PosBY"));
+                    if (isDevice == false) {
+                        posX = Utils.getPixel(width / 12, obj.getInt("PosAX"), obj.getInt("PosBX"));
+                        posY = Utils.getPixel(height / 12, obj.getInt("PosAY"), obj.getInt("PosBY"));
+                    } else {
+                        devicePosX = Utils.getPixel(width / 12, obj.getInt("PosAX"), obj.getInt("PosBX"));
+                        devicePosY = Utils.getPixel(height / 12, obj.getInt("PosAY"), obj.getInt("PosBY"));
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -233,8 +252,12 @@ public class MapFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... params) {
             while (true) {
+                SystemClock.sleep(6000);
                 Bundle bundle = fragment.getArguments();
-                SystemClock.sleep(3000);
+                if (bundle != null) {
+                    deviceLat = bundle.getDouble("LAT");
+                    deviceLong = bundle.getDouble("LONG");
+                }
                 if (gps.canGetLocation()) {
                     latitude = gps.getLatitude();
                     longitude = gps.getLongitude();
@@ -243,7 +266,10 @@ public class MapFragment extends Fragment {
                 } else {
                     gps.showSettingAlert();
                 }
-                getCurrentPointMap();
+                getPointMap(latitude, longitude, false);
+                if (devicePosX != 0 || devicePosY != 0) {
+                    getPointMap(deviceLat, deviceLong, true);
+                }
                 publishProgress();
             }
 //            return null;

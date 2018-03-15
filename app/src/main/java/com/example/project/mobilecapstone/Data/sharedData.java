@@ -5,5 +5,9 @@ package com.example.project.mobilecapstone.Data;
  */
 
 public class sharedData {
-    public static final String IP = "192.168.1.103";
+    //IP of server
+    public static final String IP = "10.82.131.150";
+    //tracking location
+    public static  String LAT = "";
+    public static  String LONG = "";
 }
