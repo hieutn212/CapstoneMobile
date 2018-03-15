@@ -59,8 +59,10 @@ public class TrackingService extends IntentService {
                 br.close();
                 //send result to MapFragment
                 String device = responseOutput.toString();
-                sharedData.LAT = new JSONObject(device).getString("Latitude").toString();
-                sharedData.LONG = new JSONObject(device).getString("Longitude").toString();
+                sharedData.LAT = new JSONObject(device).getDouble("Latitude");
+                sharedData.LONG = new JSONObject(device).getDouble("Longitude");
+                sharedData.LAT = 10.8529456;
+                sharedData.LONG = 106.6295166;
                 Log.e(TAG, "onHandleIntent: TrackingService-Location"+ device);
                 Log.e(TAG, "onHandleIntent: TrackingService-sharedData"+ sharedData.LAT+"---"+sharedData.LONG);
             } catch (MalformedURLException e) {
