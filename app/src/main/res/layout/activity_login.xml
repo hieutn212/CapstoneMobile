@@ -59,7 +59,7 @@
             android:layout_marginTop="24dp"
             android:padding="12dp"
             android:text="@string/login_btn_submit"
-            android:onClick="onLoginClick"/>
+            android:longClickable="true" />
 
         <TextView
             android:id="@+id/link_signup"
