@@ -142,7 +142,8 @@ public class MapFragment extends Fragment {
     //create View with Canvas for map
     private class CanvasMapView extends View {
         Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        Bitmap map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
+
+
         boolean first = true;
 
         public CanvasMapView(Context context) {
@@ -160,11 +161,28 @@ public class MapFragment extends Fragment {
             super.onDraw(canvas);
             height = getHeight();
             width = getWidth();
-            Bitmap scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
-            canvas.drawBitmap(scaleMap, 0, 0, null);
+            Bitmap map;
+            Bitmap scaleMap;
             //get location from GPSRouter class
             Context context = this.getContext();
             gps = new GPSRouter(context);
+            if (gps.getAltitude() <= 6.5) {
+                map = BitmapFactory.decodeResource(getResources(), R.drawable.floorG1);
+            } else if (gps.getAltitude() <= 12.3){
+                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
+            } else if (gps.getAltitude() <= 16.1){
+                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor2);
+            }else if (gps.getAltitude() <= 19.39){
+                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor3);
+            }else if (gps.getAltitude() <= 22.5){
+                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor4);
+            }else {
+                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor5);
+            }
+            scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
+
+            canvas.drawBitmap(scaleMap, 0, 0, null);
+
             if (gps.canGetLocation()) {
 //            latitude = 10.8530167;
 //            longitude = 106.6296201;
