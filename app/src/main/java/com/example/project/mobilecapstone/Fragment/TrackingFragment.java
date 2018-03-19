@@ -1,7 +1,6 @@
 package com.example.project.mobilecapstone.Fragment;
 
 import android.app.Dialog;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -22,7 +21,6 @@ import android.widget.Toast;
 import com.example.project.mobilecapstone.Data.UserInfo;
 import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.R;
-import com.example.project.mobilecapstone.Utils.TrackingService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -159,16 +157,17 @@ public class TrackingFragment extends Fragment {
             btn_track.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Intent intent = new Intent(getContext(), TrackingService.class);
-                    intent.putExtra("id",deviceId.getText());
-                    getActivity().startService(intent);
+//                    Intent intent = new Intent(getContext(), TrackingService.class);
+//                    intent.putExtra("id",deviceId.getText());
+//                    getActivity().startService(intent);
+                    new getLocation().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, deviceId.getText().toString());
                 }
             });
             return v;
         }
     }
 
-    
+
     //create new device
     public class CreateProduct extends AsyncTask<String, Void, String> {
 
@@ -287,6 +286,31 @@ public class TrackingFragment extends Fragment {
 
         @Override
         protected String doInBackground(String... params) {
+            try {
+                URL url = new URL("http://"+ sharedData.IP +":57305/api/Position/trackingProduct?deviceId=" + params[0]);
+
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setDoInput(true);
+                connection.setDoOutput(true);
+                int responseCode = connection.getResponseCode();
+                Log.e(TAG, "doInBackground:" + responseCode);
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String line = "";
+                responseOutput = new StringBuilder();
+                while ((line = br.readLine()) != null) {
+                    responseOutput.append(line);
+                }
+                br.close();
+                Log.e(TAG, "doInBackground-getLocation: " + responseOutput.toString());
+            } catch (MalformedURLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
             return null;
         }
@@ -297,6 +321,8 @@ public class TrackingFragment extends Fragment {
                 String device = responseOutput.toString();
                 double latitude = new JSONObject(device).getDouble("Latitude");
                 double longitude = new JSONObject(device).getDouble("Longitude");
+//                longitude = 106.6296557;
+//                latitude = 10.8530122;
                 Log.e(TAG, "onPostExecute: " + latitude + longitude);
                 Bundle bundle = new Bundle();
                 bundle.putDouble("LAT", latitude);

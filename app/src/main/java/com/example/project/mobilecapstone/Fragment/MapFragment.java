@@ -67,17 +67,7 @@ public class MapFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        //get location from GPSRouter class
-        Context context = getContext();
-        gps = new GPSRouter(context);
-        if (gps.canGetLocation()) {
-//            latitude = 10.8530167;
-//            longitude = 106.6296201;
-            latitude = gps.getLatitude();
-            longitude = gps.getLongitude();
-        } else {
-            gps.showSettingAlert();
-        }
+
 //        //create sensor manager
 //        SM = (SensorManager) context.getSystemService(SENSOR_SERVICE);
 //
@@ -100,6 +90,7 @@ public class MapFragment extends Fragment {
         canvasMapView = new CanvasMapView(getContext());
         canvasMapView.setId(R.id.viewCanvas);
         layout.addView(canvasMapView);
+        stopTask = false;
         return v;
     }
 
@@ -171,6 +162,17 @@ public class MapFragment extends Fragment {
             width = getWidth();
             Bitmap scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
+            //get location from GPSRouter class
+            Context context = this.getContext();
+            gps = new GPSRouter(context);
+            if (gps.canGetLocation()) {
+//            latitude = 10.8530167;
+//            longitude = 106.6296201;
+                latitude = gps.getLatitude();
+                longitude = gps.getLongitude();
+            } else {
+                gps.showSettingAlert();
+            }
             if (posX != 0 || posY != 0) {
                 mPaint.setColor(Color.BLUE);
                 canvas.drawCircle(posX, posY, 10, mPaint);
@@ -211,7 +213,7 @@ public class MapFragment extends Fragment {
                 br.close();
                 String json = responseOutput.toString();
                 try {
-                    JSONObject obj = new JSONObject(json).getJSONObject("Room");
+                    JSONObject obj = new JSONObject(json);
                     if (isDevice == false) {
                         posX = Utils.getPixel(width / 12, obj.getInt("PosAX"), obj.getInt("PosBX"));
                         posY = Utils.getPixel(height / 12, obj.getInt("PosAY"), obj.getInt("PosBY"));
@@ -234,9 +236,9 @@ public class MapFragment extends Fragment {
 
     public class CanvasAsyTask extends AsyncTask<Void, Double, Void> {
 
-        private Fragment fragment;
+        private MapFragment fragment;
 
-        public CanvasAsyTask(Fragment fragment) {
+        public CanvasAsyTask(MapFragment fragment) {
             this.fragment = fragment;
         }
 //        private Activity activity;
@@ -251,28 +253,21 @@ public class MapFragment extends Fragment {
 
         @Override
         protected Void doInBackground(Void... params) {
-            while (true) {
+            while (stopTask == false) {
                 SystemClock.sleep(6000);
                 Bundle bundle = fragment.getArguments();
                 if (bundle != null) {
                     deviceLat = bundle.getDouble("LAT");
                     deviceLong = bundle.getDouble("LONG");
                 }
-                if (gps.canGetLocation()) {
-                    latitude = gps.getLatitude();
-                    longitude = gps.getLongitude();
-//                    latitude = 10.8529373;
-//                    longitude = 106.6294958;
-                } else {
-                    gps.showSettingAlert();
-                }
+
                 getPointMap(latitude, longitude, false);
-                if (devicePosX != 0 || devicePosY != 0) {
+                if (deviceLat != 0 || deviceLong != 0) {
                     getPointMap(deviceLat, deviceLong, true);
                 }
                 publishProgress();
             }
-//            return null;
+            return null;
         }
 
         @SuppressLint("WrongCall")

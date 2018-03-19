@@ -20,10 +20,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.example.project.mobilecapstone.Fragment.MapFragment;
-import com.example.project.mobilecapstone.R;
-import com.example.project.mobilecapstone.Fragment.TrackingFragment;
 import com.example.project.mobilecapstone.Data.UserInfo;
+import com.example.project.mobilecapstone.Fragment.MapFragment;
+import com.example.project.mobilecapstone.Fragment.TrackingFragment;
+import com.example.project.mobilecapstone.R;
 
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -170,8 +170,9 @@ public class HomeActivity extends AppCompatActivity
 
         if (id == R.id.nav_map) {
             fm.beginTransaction().replace(R.id.content_main, new MapFragment()).commit();
-
         } else if (id == R.id.nav_trackers) {
+            MapFragment fragment = (MapFragment)fm.getFragments().get(0);
+            fragment.stopTask = true;
             fm.beginTransaction().replace(R.id.content_main, new TrackingFragment()).commit();
         } else if (id == R.id.nav_settings) {
 
