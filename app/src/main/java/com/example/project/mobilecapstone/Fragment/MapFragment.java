@@ -19,11 +19,14 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.example.project.mobilecapstone.Data.Corner;
+import com.example.project.mobilecapstone.Data.Room;
 import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.R;
 import com.example.project.mobilecapstone.Utils.GPSRouter;
 import com.example.project.mobilecapstone.Utils.Utils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -43,12 +46,15 @@ public class MapFragment extends Fragment {
     GPSRouter gps;
     static double latitude;
     static double longitude;
+    static double altitude;
     static float posX = 0;
     static float posY = 0;
     static double deviceLat = 0;
     static double deviceLong = 0;
     static float devicePosX = 0;
     static float devicePosY = 0;
+    private String currentFloor = "";
+    public static Room[] rooms = null;
 
     static int width = 0;
     static int height = 0;
@@ -77,7 +83,7 @@ public class MapFragment extends Fragment {
 //        //register sensor listener
 //        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
         this.getArguments();
-        new CanvasAsyTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        new CanvasAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         getActivity();
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_map, container, false);
@@ -143,6 +149,7 @@ public class MapFragment extends Fragment {
     private class CanvasMapView extends View {
         Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         Bitmap map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
+        Corner[] corners = new Corner[4];
         boolean first = true;
 
         public CanvasMapView(Context context) {
@@ -162,6 +169,11 @@ public class MapFragment extends Fragment {
             width = getWidth();
             Bitmap scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
+            if (first) {
+                initCorner();
+                first = false;
+            }
+            new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
             //get location from GPSRouter class
             Context context = this.getContext();
             gps = new GPSRouter(context);
@@ -170,6 +182,7 @@ public class MapFragment extends Fragment {
 //            longitude = 106.6296201;
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
+                altitude = gps.getAltitude();
             } else {
                 gps.showSettingAlert();
             }
@@ -181,8 +194,21 @@ public class MapFragment extends Fragment {
                 mPaint.setColor(Color.GREEN);
                 canvas.drawCircle(devicePosX, devicePosY, 10, mPaint);
             }
+            if (6.8 <= altitude && altitude < 9.9) {
+                currentFloor = "G1";
+            } else if (9.9 <= altitude && altitude < 13.3) {
+                currentFloor = "floor 1";
+            } else if (13.3 <= altitude && altitude < 17.3) {
+                currentFloor = "floor 2";
+            } else if (17.3 <= altitude && altitude < 20.4) {
+                currentFloor = "floor 3";
+            } else if (20.4 <= altitude && altitude < 24.3) {
+                currentFloor = "floor 4";
+            } else if (altitude >= 24.3) {
+                currentFloor = "floor 5";
+            }
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +
-                            latitude + "\nLong: " + longitude,
+                            latitude + "\nLong: " + longitude + "\nFloor: " + currentFloor,
                     Toast.LENGTH_LONG).show();
         }
 
@@ -193,52 +219,116 @@ public class MapFragment extends Fragment {
             mPaint.setStrokeCap(Paint.Cap.ROUND); // Cho dau cac duong ve duoc bo tron
             mPaint.setAlpha(150);
         }
-    }
 
-    public static void getPointMap(double latitude, double longitude, boolean isDevice) {
-        try {
-            URL url = new URL("http://" + sharedData.IP + ":57305/api/Position/CalculatePosition?floor=" + 1 + "&mapId=" + 1
-                    + "&latitude=" + latitude + "&longitude=" + longitude);
-
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpsURLConnection.HTTP_OK) {
-                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                StringBuilder responseOutput = new StringBuilder();
-                String line = "";
-                while ((line = br.readLine()) != null) {
-                    responseOutput.append(line);
-                }
-                br.close();
-                String json = responseOutput.toString();
-                try {
-                    JSONObject obj = new JSONObject(json);
-                    if (isDevice == false) {
-                        posX = Utils.getPixel(width / 12, obj.getInt("PosAX"), obj.getInt("PosBX"));
-                        posY = Utils.getPixel(height / 12, obj.getInt("PosAY"), obj.getInt("PosBY"));
-                    } else {
-                        devicePosX = Utils.getPixel(width / 12, obj.getInt("PosAX"), obj.getInt("PosBX"));
-                        devicePosY = Utils.getPixel(height / 12, obj.getInt("PosAY"), obj.getInt("PosBY"));
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (MalformedURLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        private void initCorner() {
+            Corner corner = new Corner();
+            corner.setName("Red");
+            corner.setX(this.getWidth() / 12 * 3);
+            corner.setY(this.getHeight() / 12 * 11 + this.getHeight() / 12 / 2);
+            corner.setColor(Color.RED);
+            corners[0] = corner;
+            Corner corner1 = new Corner();
+            corner1.setName("Green");
+            corner1.setX(getWidth() / 12 * 3);
+            corner1.setY(getHeight() / 24);
+            corner1.setColor(Color.GREEN);
+            corners[1] = corner1;
+            Corner corner2 = new Corner();
+            corner2.setName("Yellow");
+            corner2.setX(getWidth() / 12 * 9);
+            corner2.setY(getHeight() / 24);
+            corner2.setColor(Color.YELLOW);
+            corners[2] = corner2;
+            Corner corner3 = new Corner();
+            corner3.setName("CYAN");
+            corner3.setX(getWidth() / 12 * 9);
+            corner3.setY(getHeight() / 12 * 11 + getHeight() / 12 / 2);
+            corner3.setColor(Color.CYAN);
+            corners[3] = corner3;
         }
     }
 
-    public class CanvasAsyTask extends AsyncTask<Void, Double, Void> {
+    public static void getPointMap(double latitude, double longitude, boolean isDevice) {
+
+        for (Room room : rooms) {
+            double cal = Utils.HaversineInM(latitude, longitude, room.getLatitude(), room.getLongitude());
+            if (cal <= 2.5) {
+                if (isDevice == false) {
+                    posX = Utils.getPixel(width / 12, room.getPosAX(), room.getPosBX());
+                    posY = Utils.getPixel(height / 12, room.getPosAY(), room.getPosBY());
+                } else {
+                    devicePosX = Utils.getPixel(width / 12, room.getPosAX(), room.getPosBX());
+                    devicePosY = Utils.getPixel(height / 12, room.getPosAY(), room.getPosBY());
+                }
+            }
+        }
+    }
+
+
+    public class initListRoom extends AsyncTask {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onPostExecute(Object o) {
+            super.onPostExecute(o);
+        }
+
+        @Override
+        protected Object doInBackground(Object[] objects) {
+            try {
+                int mapId = Integer.parseInt(objects[0].toString());
+                int floor = Integer.parseInt(objects[1].toString());
+                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/GetListRoom?floor=" + floor + "&mapId=" + mapId);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    StringBuilder responseOutput = new StringBuilder();
+                    String line = "";
+                    while ((line = br.readLine()) != null) {
+                        responseOutput.append(line);
+                    }
+                    br.close();
+                    String json = responseOutput.toString();
+                    try {
+                        JSONArray list = new JSONArray(json);
+                        int total = list.length();
+                        rooms = new Room[total];
+                        for (int i = 0; i < total; i++) {
+                            JSONObject jsonObject = new JSONObject(list.get(i).toString());
+                            Room newRoom = new Room(jsonObject.getInt("Id"), jsonObject.getString("Name"),
+                                    jsonObject.getInt("Floor"), jsonObject.getDouble("Length"),
+                                    jsonObject.getDouble("Width"), jsonObject.getInt("MapId"),
+                                    jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"),
+                                    jsonObject.getInt("PosAX"), jsonObject.getInt("PosAY"),
+                                    jsonObject.getInt("PosBX"), jsonObject.getInt("PosBY"));
+                            rooms[i] = newRoom;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (MalformedURLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    public class CanvasAsyncTask extends AsyncTask<Void, Double, Void> {
 
         private MapFragment fragment;
 
-        public CanvasAsyTask(MapFragment fragment) {
+        public CanvasAsyncTask(MapFragment fragment) {
             this.fragment = fragment;
         }
 //        private Activity activity;
