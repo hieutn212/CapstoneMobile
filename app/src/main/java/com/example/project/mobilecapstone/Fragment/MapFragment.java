@@ -2,6 +2,7 @@ package com.example.project.mobilecapstone.Fragment;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -12,14 +13,18 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.SearchView;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Data.sharedData;
+import com.example.project.mobilecapstone.MapSearchActivity;
 import com.example.project.mobilecapstone.R;
 import com.example.project.mobilecapstone.Utils.GPSRouter;
 import com.example.project.mobilecapstone.Utils.Utils;
@@ -37,7 +42,7 @@ import java.net.URL;
 import javax.net.ssl.HttpsURLConnection;
 
 
-public class MapFragment extends Fragment {
+public class MapFragment extends Fragment implements View.OnClickListener{
 
     public boolean stopTask = false;
     GPSRouter gps;
@@ -50,10 +55,16 @@ public class MapFragment extends Fragment {
     static float devicePosX = 0;
     static float devicePosY = 0;
 
+    static float roomPosX = 0;
+    static float roomPosY = 0;
+
     static int width = 0;
     static int height = 0;
     private static final String TAG = "MapFragment";
     CanvasMapView canvasMapView;
+
+    Button btnSearch;
+    private static final int REQUEST_CODE_ROOM = 0x9345;
 //    private String isMoving;
 //    private Sensor mySensor;
 //    private SensorManager SM;
@@ -78,6 +89,13 @@ public class MapFragment extends Fragment {
         } else {
             gps.showSettingAlert();
         }
+
+        // Inflate the layout for this fragment
+        View v = inflater.inflate(R.layout.fragment_map, container, false);
+
+        btnSearch =(Button) v.findViewById(R.id.buttonSearch);
+        btnSearch.setOnClickListener((View.OnClickListener) this);
+
 //        //create sensor manager
 //        SM = (SensorManager) context.getSystemService(SENSOR_SERVICE);
 //
@@ -89,18 +107,48 @@ public class MapFragment extends Fragment {
         this.getArguments();
         new CanvasAsyTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         getActivity();
-        // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_map, container, false);
+
         //assign text view
 
 //        accelLast = SM.GRAVITY_EARTH;
 //        accelCurrent = SM.GRAVITY_EARTH;
+
 
         FrameLayout layout = v.findViewById(R.id.canvasView);
         canvasMapView = new CanvasMapView(getContext());
         canvasMapView.setId(R.id.viewCanvas);
         layout.addView(canvasMapView);
         return v;
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.buttonSearch:
+                Intent i = new Intent(getActivity(), MapSearchActivity.class);
+                startActivityForResult(i, REQUEST_CODE_ROOM);
+                break;
+        }
+
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==REQUEST_CODE_ROOM)
+        {
+            if(resultCode == 1){
+                //Draw a room point
+                data.getIntExtra("PosAX",0);
+                roomPosX = Utils.getPixel(width / 12, data.getIntExtra("PosAX", 0), data.getIntExtra("PosBX",0));
+                roomPosY = Utils.getPixel(width / 12, data.getIntExtra("PosAY", 0), data.getIntExtra("PosBY",0));
+
+            }
+            if (resultCode == 0) {
+                //Write your code if there's no result
+            }
+        }
     }
 
     @Override
@@ -178,6 +226,10 @@ public class MapFragment extends Fragment {
             if (devicePosX != 0 || devicePosY != 0) {
                 mPaint.setColor(Color.GREEN);
                 canvas.drawCircle(devicePosX, devicePosY, 10, mPaint);
+            }
+            if(roomPosX !=0 || roomPosY !=0){
+                mPaint.setColor(Color.RED);
+                canvas.drawCircle(roomPosX, roomPosY,10, mPaint);
             }
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +
                             latitude + "\nLong: " + longitude,
