@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.support.v7.widget.Toolbar;
@@ -65,9 +67,16 @@ public class MapSearchActivity extends AppCompatActivity {
         lstView = (ListView) findViewById(R.id.lstView);
         ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, lstSource);
         lstView.setAdapter(adapter);
+        lstView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                roomName = lstSource[position];
+                buildingId = 1;
+                new getRoom().execute();
+            }
+        });
 
         searchView = (MaterialSearchView)findViewById(R.id.search_view);
-
         searchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
             @Override
             public void onSearchViewShown() {

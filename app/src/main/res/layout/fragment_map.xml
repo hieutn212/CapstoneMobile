@@ -5,20 +5,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.example.project.mobilecapstone.Fragment.MapFragment">
-    <Button
-        android:id="@+id/buttonSearch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Search" />
 
     <FrameLayout
         android:id="@+id/canvasView"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <Button
+            android:id="@+id/buttonSearch"
+            style="@style/Widget.AppCompat.Button.Small"
+            android:layout_width="82dp"
+            android:layout_height="38dp"
+            android:layout_marginLeft="300dp"
+            android:drawableTop="@drawable/ic_search"
+            android:elevation="24dp" />
     </FrameLayout>
-
-
 
 
 </FrameLayout>
