@@ -84,6 +84,7 @@ public class MapFragment extends Fragment {
 //        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
         this.getArguments();
         new CanvasAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
         getActivity();
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_map, container, false);
@@ -172,17 +173,17 @@ public class MapFragment extends Fragment {
             if (first) {
                 initCorner();
                 first = false;
+                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
             }
-            new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
             //get location from GPSRouter class
             Context context = this.getContext();
             gps = new GPSRouter(context);
             if (gps.canGetLocation()) {
-//            latitude = 10.8530167;
-//            longitude = 106.6296201;
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
+//            latitude = 10.8529083;
+//            longitude = 106.6294104;
             } else {
                 gps.showSettingAlert();
             }
