@@ -55,6 +55,7 @@ public class MapFragment extends Fragment {
     static float devicePosY = 0;
     private String currentFloor = "";
     public static Room[] rooms = null;
+    public static Corner[] corners = null;
 
     static int width = 0;
     static int height = 0;
@@ -85,6 +86,7 @@ public class MapFragment extends Fragment {
         this.getArguments();
         new CanvasAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
+        new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
         getActivity();
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_map, container, false);
@@ -171,9 +173,9 @@ public class MapFragment extends Fragment {
             Bitmap scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
             if (first) {
-                initCorner();
                 first = false;
                 new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
+                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
             }
             //get location from GPSRouter class
             Context context = this.getContext();
@@ -182,8 +184,8 @@ public class MapFragment extends Fragment {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
-//            latitude = 10.8529083;
-//            longitude = 106.6294104;
+            latitude = 10.8529944;
+            longitude = 106.6285655;
             } else {
                 gps.showSettingAlert();
             }
@@ -221,48 +223,57 @@ public class MapFragment extends Fragment {
             mPaint.setAlpha(150);
         }
 
-        private void initCorner() {
-            Corner corner = new Corner();
-            corner.setName("Red");
-            corner.setX(this.getWidth() / 12 * 3);
-            corner.setY(this.getHeight() / 12 * 11 + this.getHeight() / 12 / 2);
-            corner.setColor(Color.RED);
-            corners[0] = corner;
-            Corner corner1 = new Corner();
-            corner1.setName("Green");
-            corner1.setX(getWidth() / 12 * 3);
-            corner1.setY(getHeight() / 24);
-            corner1.setColor(Color.GREEN);
-            corners[1] = corner1;
-            Corner corner2 = new Corner();
-            corner2.setName("Yellow");
-            corner2.setX(getWidth() / 12 * 9);
-            corner2.setY(getHeight() / 24);
-            corner2.setColor(Color.YELLOW);
-            corners[2] = corner2;
-            Corner corner3 = new Corner();
-            corner3.setName("CYAN");
-            corner3.setX(getWidth() / 12 * 9);
-            corner3.setY(getHeight() / 12 * 11 + getHeight() / 12 / 2);
-            corner3.setColor(Color.CYAN);
-            corners[3] = corner3;
-        }
     }
 
     public static void getPointMap(double latitude, double longitude, boolean isDevice) {
+        int corner = 1;
+        double min = Utils.PerpendicularDistance(corners[0], corners[1], longitude, latitude);
+        double perpendicular = Utils.PerpendicularDistance(corners[1], corners[2], longitude, latitude);
+        if (min > perpendicular) {
+            min = perpendicular;
+            corner = 2;
+        }
+        perpendicular = Utils.PerpendicularDistance(corners[2], corners[3], longitude, latitude);
+        if (perpendicular < min) {
+            min = perpendicular;
+            corner = 3;
+        }
+        perpendicular = Utils.PerpendicularDistance(corners[3], corners[0], longitude, latitude);
+        if (perpendicular < min) {
+            min = perpendicular;
+            corner = 4;
+        }
 
-        for (Room room : rooms) {
-            double cal = Utils.HaversineInM(latitude, longitude, room.getLatitude(), room.getLongitude());
-            if (cal <= 2.5) {
-                if (isDevice == false) {
-                    posX = Utils.getPixel(width / 12, room.getPosAX(), room.getPosBX());
-                    posY = Utils.getPixel(height / 12, room.getPosAY(), room.getPosBY());
-                } else {
-                    devicePosX = Utils.getPixel(width / 12, room.getPosAX(), room.getPosBX());
-                    devicePosY = Utils.getPixel(height / 12, room.getPosAY(), room.getPosBY());
-                }
+        if (isDevice) {
+
+        } else {
+            Corner currentCorner = corners[1];
+            double distance2 = 0.0;
+            if (corner == 1) {
+                //29  18
+                distance2 = Utils.HaversineInM(latitude, longitude, currentCorner.getLatitude(), currentCorner.getLongitude());
+                posX = width / 18 * ((float) (rooms[0].getWidth() + 1.5));
+                posY = height / 29 * Utils.getPixelWithPer(min, distance2);
+            }
+            if(corner == 3){
+                currentCorner = corners[2];
+                distance2 = Utils.HaversineInM(latitude, longitude, currentCorner.getLatitude(), currentCorner.getLongitude());
+                posX = width / 18 * ((float) (rooms[0].getWidth()*5 - 1.5));
+                posY = height / 29 * Utils.getPixelWithPer(min, distance2);
             }
         }
+//        for (Room room : rooms) {
+//            double cal = Utils.HaversineInM(latitude, longitude, room.getLatitude(), room.getLongitude());
+//            if (cal <= 2.5) {
+//                if (isDevice == false) {
+//                    posX = Utils.getPixel(width / 12, room.getPosAX(), room.getPosBX());
+//                    posY = Utils.getPixel(height / 12, room.getPosAY(), room.getPosBY());
+//                } else {
+//                    devicePosX = Utils.getPixel(width / 12, room.getPosAX(), room.getPosBX());
+//                    devicePosY = Utils.getPixel(height / 12, room.getPosAY(), room.getPosBY());
+//                }
+//            }
+//        }
     }
 
 
@@ -309,6 +320,52 @@ public class MapFragment extends Fragment {
                                     jsonObject.getInt("PosAX"), jsonObject.getInt("PosAY"),
                                     jsonObject.getInt("PosBX"), jsonObject.getInt("PosBY"));
                             rooms[i] = newRoom;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (MalformedURLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    public class initListCorner extends AsyncTask {
+
+
+        @Override
+        protected Object doInBackground(Object[] objects) {
+            try {
+                int mapId = Integer.parseInt(objects[0].toString());
+                URL url = new URL("http://" + sharedData.IP + ":57305/api/Corner/GetAllCornerWithMap?&mapId=" + mapId);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    StringBuilder responseOutput = new StringBuilder();
+                    String line = "";
+                    while ((line = br.readLine()) != null) {
+                        responseOutput.append(line);
+                    }
+                    br.close();
+                    String json = responseOutput.toString();
+                    try {
+                        JSONArray list = new JSONArray(json);
+                        int total = list.length();
+                        corners = new Corner[total];
+                        for (int i = 0; i < total; i++) {
+                            JSONObject jsonObject = new JSONObject(list.get(i).toString());
+                            Corner newCorner = new Corner(jsonObject.getInt("MapId"), jsonObject.getString("Description"),
+                                    jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"),
+                                    jsonObject.getInt("Id"), jsonObject.getInt("Floor"), jsonObject.getInt("Position"));
+                            corners[i] = newCorner;
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
