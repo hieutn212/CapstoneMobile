@@ -13,6 +13,7 @@ import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -152,7 +153,6 @@ public class MapFragment extends Fragment {
     private class CanvasMapView extends View {
         Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         Bitmap map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
-        Corner[] corners = new Corner[4];
         boolean first = true;
 
         public CanvasMapView(Context context) {
@@ -184,8 +184,8 @@ public class MapFragment extends Fragment {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
-            latitude = 10.8529944;
-            longitude = 106.6285655;
+//            latitude = 10.8529944;
+//            longitude = 106.6285655;
             } else {
                 gps.showSettingAlert();
             }
@@ -247,19 +247,25 @@ public class MapFragment extends Fragment {
         if (isDevice) {
 
         } else {
-            Corner currentCorner = corners[1];
-            double distance2 = 0.0;
+            Corner currentCorner1 = corners[1];
+            Corner currentCorner2 = corners[0];
+
             if (corner == 1) {
                 //29  18
-                distance2 = Utils.HaversineInM(latitude, longitude, currentCorner.getLatitude(), currentCorner.getLongitude());
-                posX = width / 18 * ((float) (rooms[0].getWidth() + 1.5));
-                posY = height / 29 * Utils.getPixelWithPer(min, distance2);
+                float distance2 = (float) Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                posX = width / 18 * ((float) (rooms[0].getWidth()));
+                double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
+                        currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                Log.d("distanceCorner: ", distanceCorner + "");
+                double temp = Utils.getPixelWithPer(distanceCorner, distance2) - 8;
+                Log.d("temp: ", temp + "");
+                posY = (float) (height / distanceCorner * temp);
             }
-            if(corner == 3){
-                currentCorner = corners[2];
-                distance2 = Utils.HaversineInM(latitude, longitude, currentCorner.getLatitude(), currentCorner.getLongitude());
-                posX = width / 18 * ((float) (rooms[0].getWidth()*5 - 1.5));
-                posY = height / 29 * Utils.getPixelWithPer(min, distance2);
+            if (corner == 3) {
+                currentCorner1 = corners[2];
+                double distance2 = (float) Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                posX = width / 18 * ((float) (rooms[0].getWidth() * 5));
+                posY = (float) (height / 29 * Utils.getPixelWithPer(min, distance2));
             }
         }
 //        for (Room room : rooms) {
@@ -402,7 +408,7 @@ public class MapFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... params) {
             while (stopTask == false) {
-                SystemClock.sleep(6000);
+                SystemClock.sleep(8000);
                 Bundle bundle = fragment.getArguments();
                 if (bundle != null) {
                     deviceLat = bundle.getDouble("LAT");
