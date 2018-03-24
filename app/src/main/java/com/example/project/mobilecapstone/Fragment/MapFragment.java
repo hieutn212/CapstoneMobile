@@ -13,7 +13,6 @@ import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -184,8 +183,8 @@ public class MapFragment extends Fragment {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
-//            latitude = 10.8529944;
-//            longitude = 106.6285655;
+            latitude = 10.8529728;
+            longitude = 106.6295536;
             } else {
                 gps.showSettingAlert();
             }
@@ -252,20 +251,29 @@ public class MapFragment extends Fragment {
 
             if (corner == 1) {
                 //29  18
-                float distance2 = (float) Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
-                posX = width / 18 * ((float) (rooms[0].getWidth()));
+                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
-                Log.d("distanceCorner: ", distanceCorner + "");
-                double temp = Utils.getPixelWithPer(distanceCorner, distance2) - 8;
-                Log.d("temp: ", temp + "");
+                double temp = Utils.getPixelWithPer(min, distance2);
                 posY = (float) (height / distanceCorner * temp);
+//                currentCorner2 = corners[2];
+//                distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
+//                        currentCorner2.getLatitude(), currentCorner2.getLongitude());
+//                temp = Utils.PerpendicularDistance(currentCorner1, currentCorner2, longitude, latitude);
+//                temp = Utils.getPixelWithPer(temp, distance2);
+//                posX = (float)(width / distanceCorner * temp);
+                posX = width / 18 * ((float) (rooms[0].getWidth()));
             }
             if (corner == 3) {
                 currentCorner1 = corners[2];
+                currentCorner2 = corners[3];
                 double distance2 = (float) Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
+                        currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double temp = Utils.getPixelWithPer(min, distance2);
+
                 posX = width / 18 * ((float) (rooms[0].getWidth() * 5));
-                posY = (float) (height / 29 * Utils.getPixelWithPer(min, distance2));
+                posY = (float) (height / distanceCorner * temp);
             }
         }
 //        for (Room room : rooms) {
