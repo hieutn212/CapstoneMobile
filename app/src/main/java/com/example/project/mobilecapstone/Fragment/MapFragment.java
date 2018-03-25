@@ -183,8 +183,8 @@ public class MapFragment extends Fragment {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
-            latitude = 10.8529728;
-            longitude = 106.6295536;
+//            latitude = 10.8529728;
+//            longitude = 106.6295536;
             } else {
                 gps.showSettingAlert();
             }
@@ -256,13 +256,12 @@ public class MapFragment extends Fragment {
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double temp = Utils.getPixelWithPer(min, distance2);
                 posY = (float) (height / distanceCorner * temp);
-//                currentCorner2 = corners[2];
-//                distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
-//                        currentCorner2.getLatitude(), currentCorner2.getLongitude());
-//                temp = Utils.PerpendicularDistance(currentCorner1, currentCorner2, longitude, latitude);
-//                temp = Utils.getPixelWithPer(temp, distance2);
-//                posX = (float)(width / distanceCorner * temp);
-                posX = width / 18 * ((float) (rooms[0].getWidth()));
+                currentCorner2 = corners[2];
+                distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
+                        currentCorner2.getLatitude(), currentCorner2.getLongitude());
+                double x = min + 3;
+                posX = (float) (width / distanceCorner * x);
+//                posX = width / 18 * ((float) (rooms[0].getWidth()));
             }
             if (corner == 3) {
                 currentCorner1 = corners[2];
@@ -271,9 +270,12 @@ public class MapFragment extends Fragment {
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double temp = Utils.getPixelWithPer(min, distance2);
-
-                posX = width / 18 * ((float) (rooms[0].getWidth() * 5));
                 posY = (float) (height / distanceCorner * temp);
+                currentCorner2 = corners[1];
+                distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
+                        currentCorner2.getLatitude(), currentCorner2.getLongitude());
+                double x = distanceCorner - (min + 3);
+                posX = (float) (width / distanceCorner * x);
             }
         }
 //        for (Room room : rooms) {
@@ -416,7 +418,7 @@ public class MapFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... params) {
             while (stopTask == false) {
-                SystemClock.sleep(8000);
+                SystemClock.sleep(6000);
                 Bundle bundle = fragment.getArguments();
                 if (bundle != null) {
                     deviceLat = bundle.getDouble("LAT");
