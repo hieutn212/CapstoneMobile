@@ -1,18 +1,22 @@
 package com.example.project.mobilecapstone.Fragment;
 
 import android.annotation.SuppressLint;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,15 +28,18 @@ import com.example.project.mobilecapstone.R;
 import com.example.project.mobilecapstone.Utils.GPSRouter;
 import com.example.project.mobilecapstone.Utils.Utils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -49,11 +56,14 @@ public class MapFragment extends Fragment {
     static double deviceLong = 0;
     static float devicePosX = 0;
     static float devicePosY = 0;
-
+    ArrayList<String> listMap = new ArrayList<String>();
+    Integer buildingId;
+    private DownloadManager downloadManager;
     static int width = 0;
     static int height = 0;
     private static final String TAG = "MapFragment";
     CanvasMapView canvasMapView;
+    private String result = "";
 //    private String isMoving;
 //    private Sensor mySensor;
 //    private SensorManager SM;
@@ -76,6 +86,11 @@ public class MapFragment extends Fragment {
 //
 //        //register sensor listener
 //        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
+
+        new GetListMap().execute();
+        do {
+
+        }while (!result.equals("Finish"));
         this.getArguments();
         new CanvasAsyTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         getActivity();
@@ -161,28 +176,65 @@ public class MapFragment extends Fragment {
             super.onDraw(canvas);
             height = getHeight();
             width = getWidth();
+            String filename = "";
             Bitmap map;
             Bitmap scaleMap;
             //get location from GPSRouter class
             Context context = this.getContext();
             gps = new GPSRouter(context);
-            if (gps.getAltitude() <= 6.5) {
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floorG1);
-            } else if (gps.getAltitude() <= 12.3){
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
-            } else if (gps.getAltitude() <= 16.1){
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor2);
-            }else if (gps.getAltitude() <= 19.39){
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor3);
-            }else if (gps.getAltitude() <= 22.5){
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor4);
-            }else {
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor5);
+            for (int i = 0; i < listMap.size(); i++) {
+                try {
+                    double altitudeMap1 = new JSONObject(listMap.get(i)).getDouble("Altitide");
+                    double altitudeMap2 = 0.0;
+                    String nameMap = new JSONObject(listMap.get(i)).getString("Name");
+                    if (i < listMap.size()-1) {
+                        altitudeMap2 = new JSONObject(listMap.get(i + 1)).getDouble("Altitide");
+                        if (altitudeMap1 == 0.0) {
+                            filename = "floor1";
+                            break;
+                        }
+                        else if (altitudeMap1 <= gps.getAltitude() && gps.getAltitude() < altitudeMap2) {
+                            filename = nameMap;
+                            break;
+                        }
+                    } else {
+                        if (altitudeMap1 <= gps.getAltitude()) {
+                            filename = nameMap;
+                            break;
+                        }
+                    }
+                } catch (JSONException e) {
+                    Log.e(TAG, "onDraw: JSONException", e);
+                    e.printStackTrace();
+                }
             }
+//
+
+//            if (6.8 <= gps.getAltitude() && gps.getAltitude() < 9.9) {
+//                //map = BitmapFactory.decodeResource(getResources(), R.drawable.floorg1);
+//                filename = "floorg1";
+//            } else if (9.9 <= gps.getAltitude() && gps.getAltitude() < 13.3){
+//               // map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
+//                filename = "floor1";
+//            } else if (13.3 <= gps.getAltitude() && gps.getAltitude() < 17.3){
+//                //map = BitmapFactory.decodeResource(getResources(), R.drawable.floor2);
+//                filename = "floor2";
+//            }else if (17.3 <= gps.getAltitude() && gps.getAltitude() < 20.4){
+//                //map = BitmapFactory.decodeResource(getResources(), R.drawable.floor3);
+//                filename = "floor3";
+//            }else if (20.4 <= gps.getAltitude() && gps.getAltitude() < 24.3){
+//                //map = BitmapFactory.decodeResource(getResources(), R.drawable.floor4);
+//                filename = "floor4";
+//            }else {
+//               // map = BitmapFactory.decodeResource(getResources(), R.drawable.floor5);
+//                filename = "floor5";
+//            }
+            String path = Environment.getExternalStorageDirectory() + "/Download/" + filename + ".png";
+            //log 4 test
+            Log.e(TAG, "onDraw: DECODE FILE PATH" + path );
+            map = BitmapFactory.decodeFile(path);
             scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
-
             canvas.drawBitmap(scaleMap, 0, 0, null);
-
             if (gps.canGetLocation()) {
 //            latitude = 10.8530167;
 //            longitude = 106.6296201;
@@ -200,7 +252,7 @@ public class MapFragment extends Fragment {
                 canvas.drawCircle(devicePosX, devicePosY, 10, mPaint);
             }
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +
-                            latitude + "\nLong: " + longitude,
+                            latitude + "\nLong: " + longitude + "\nAlt: " + gps.getAltitude(),
                     Toast.LENGTH_LONG).show();
         }
 
@@ -301,5 +353,83 @@ public class MapFragment extends Fragment {
             super.onPostExecute(o);
         }
 
+    }
+
+    public class GetListMap extends AsyncTask<String, Void, String> {
+        @Override
+        protected void onPreExecute() {
+            buildingId = 1;
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                URL url = new URL("http://" + sharedData.IP + ":57305/api/Map/GetListMap?buildingId=" + buildingId);
+                Log.e(TAG, "doInBackground: GetListMap" + sharedData.IP);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                int responseCode = connection.getResponseCode();
+                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String line = "";
+                final StringBuilder responseOutput = new StringBuilder();
+                while ((line = br.readLine()) != null) {
+                    responseOutput.append(line);
+                }
+                //logging
+                Log.e(TAG, "doInBackground: getListMap" + responseOutput.toString());
+                br.close();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    convertToArray(responseOutput.toString());
+                    File SDCardRoot = Environment.getExternalStorageDirectory();
+                    for (int i = 0; i < listMap.size(); i++) {
+                        String urlMap = new JSONObject(listMap.get(i)).getString("MapUrl");
+                        String nameMap = new JSONObject(listMap.get(i)).getString("Name");
+
+                        //log 4 test
+                        Log.e(TAG, "doInBackground: PATH CHECK"+SDCardRoot + "/Download/" + nameMap );
+
+                        File checkFile = new File(SDCardRoot + "/Download/" + nameMap + ".png");
+                        if (!checkFile.exists()) {
+                            DownloadMap(urlMap, nameMap);
+                        }
+                    }
+                }
+                if (responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
+                    Toast.makeText(getContext(), "Có lỗi xảy ra!", Toast.LENGTH_SHORT).show();
+
+                }
+            } catch (MalformedURLException e) {
+                Log.e(TAG, "doInBackground: GetListMap" + e);
+            } catch (IOException e) {
+                Log.e(TAG, "doInBackground: GetListMap" + e);
+            } catch (JSONException e) {
+                Log.e(TAG, "doInBackground: GetListMap" + e);
+            }
+            result = "Finish";
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+        }
+    }
+
+    //convert json object to array
+    public void convertToArray(String s) throws JSONException {
+        JSONArray array = new JSONArray(s);
+        if (array != null) {
+            for (int i = 0; i < array.length(); i++) {
+                listMap.add(array.get(i).toString());
+            }
+        }
+    }
+
+    public void DownloadMap(String urlMap, String nameMap) {
+        downloadManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
+        Uri uri = Uri.parse(urlMap);
+        DownloadManager.Request request = new DownloadManager.Request(uri);
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, nameMap+".png");
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        Long reference = downloadManager.enqueue(request);
     }
 }
