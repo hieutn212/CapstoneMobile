@@ -87,6 +87,7 @@ public class MapFragment extends Fragment {
 //        //register sensor listener
 //        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
 
+
         new GetListMap().execute();
         do {
 
@@ -189,7 +190,7 @@ public class MapFragment extends Fragment {
                     String nameMap = new JSONObject(listMap.get(i)).getString("Name");
                     if (i < listMap.size()-1) {
                         altitudeMap2 = new JSONObject(listMap.get(i + 1)).getDouble("Altitide");
-                        if (altitudeMap1 == 0.0) {
+                        if (gps.getAltitude() == 0.0) {
                             filename = "floor1";
                             break;
                         }
@@ -230,6 +231,10 @@ public class MapFragment extends Fragment {
 //                filename = "floor5";
 //            }
             String path = Environment.getExternalStorageDirectory() + "/Download/" + filename + ".png";
+            File temp = new File(Environment.getExternalStorageDirectory() + "/Download/" + filename + ".png");
+            do{
+
+            }while (!temp.exists());
             //log 4 test
             Log.e(TAG, "onDraw: DECODE FILE PATH" + path );
             map = BitmapFactory.decodeFile(path);
@@ -382,7 +387,7 @@ public class MapFragment extends Fragment {
                     convertToArray(responseOutput.toString());
                     File SDCardRoot = Environment.getExternalStorageDirectory();
                     for (int i = 0; i < listMap.size(); i++) {
-                        String urlMap = new JSONObject(listMap.get(i)).getString("MapUrl");
+                        String urlMap = "http://"+sharedData.IP+":57305/" + new JSONObject(listMap.get(i)).getString("MapUrl");
                         String nameMap = new JSONObject(listMap.get(i)).getString("Name");
 
                         //log 4 test
@@ -426,6 +431,7 @@ public class MapFragment extends Fragment {
 
     public void DownloadMap(String urlMap, String nameMap) {
         downloadManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
+
         Uri uri = Uri.parse(urlMap);
         DownloadManager.Request request = new DownloadManager.Request(uri);
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, nameMap+".png");
