@@ -61,6 +61,7 @@ public class MapFragment extends Fragment {
     static int height = 0;
     private static final String TAG = "MapFragment";
     CanvasMapView canvasMapView;
+    Fragment fragment;
 //    private String isMoving;
 //    private Sensor mySensor;
 //    private SensorManager SM;
@@ -83,11 +84,11 @@ public class MapFragment extends Fragment {
 //
 //        //register sensor listener
 //        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
-        this.getArguments();
         new CanvasAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
         new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
         getActivity();
+        fragment = this;
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_map, container, false);
         //assign text view
@@ -176,6 +177,7 @@ public class MapFragment extends Fragment {
                 new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
                 new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
             }
+
             //get location from GPSRouter class
             Context context = this.getContext();
             gps = new GPSRouter(context);
@@ -188,22 +190,16 @@ public class MapFragment extends Fragment {
             } else {
                 gps.showSettingAlert();
             }
-            if (altitude <= 6.5) {
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floorG1);
-            } else if (altitude <= 12.3){
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
-            } else if (altitude <= 16.1){
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor2);
-            }else if (altitude <= 19.39){
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor3);
-            }else if (altitude <= 22.5){
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor4);
-            }else {
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor5);
+            Bundle bundle = fragment.getArguments();
+            if (bundle != null) {
+                deviceLat = bundle.getDouble("LAT");
+                deviceLong = bundle.getDouble("LONG");
             }
-            scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
 
-            canvas.drawBitmap(scaleMap, 0, 0, null);
+            getPointMap(latitude, longitude, false);
+            if (deviceLat != 0 || deviceLong != 0) {
+                getPointMap(deviceLat, deviceLong, true);
+            }
             if (posX != 0 || posY != 0) {
                 mPaint.setColor(Color.BLUE);
                 canvas.drawCircle(posX, posY, 10, mPaint);
@@ -246,12 +242,9 @@ public class MapFragment extends Fragment {
             corner = 4;
         }
 
+        Corner currentCorner1 = corners[1];
+        Corner currentCorner2 = corners[0];
         if (isDevice) {
-
-        } else {
-            Corner currentCorner1 = corners[1];
-            Corner currentCorner2 = corners[0];
-
             if (corner == 1) {
                 //29  18
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -265,8 +258,35 @@ public class MapFragment extends Fragment {
                 double x = min + 3;
                 posX = (float) (width / distanceCorner * x);
 //                posX = width / 18 * ((float) (rooms[0].getWidth()));
+            } else if (corner == 3) {
+                currentCorner1 = corners[2];
+                currentCorner2 = corners[3];
+                double distance2 = (float) Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
+                        currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double temp = Utils.getPixelWithPer(min, distance2);
+                posY = (float) (height / distanceCorner * temp);
+                currentCorner2 = corners[1];
+                distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
+                        currentCorner2.getLatitude(), currentCorner2.getLongitude());
+                double x = distanceCorner - (min + 3);
+                posX = (float) (width / distanceCorner * x);
             }
-            if (corner == 3) {
+        } else {
+            if (corner == 1) {
+                //29  18
+                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
+                        currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double temp = Utils.getPixelWithPer(min, distance2);
+                posY = (float) (height / distanceCorner * temp);
+                currentCorner2 = corners[2];
+                distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
+                        currentCorner2.getLatitude(), currentCorner2.getLongitude());
+                double x = min + 3;
+                posX = (float) (width / distanceCorner * x);
+//                posX = width / 18 * ((float) (rooms[0].getWidth()));
+            } else if (corner == 3) {
                 currentCorner1 = corners[2];
                 currentCorner2 = corners[3];
                 double distance2 = (float) Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -281,18 +301,6 @@ public class MapFragment extends Fragment {
                 posX = (float) (width / distanceCorner * x);
             }
         }
-//        for (Room room : rooms) {
-//            double cal = Utils.HaversineInM(latitude, longitude, room.getLatitude(), room.getLongitude());
-//            if (cal <= 2.5) {
-//                if (isDevice == false) {
-//                    posX = Utils.getPixel(width / 12, room.getPosAX(), room.getPosBX());
-//                    posY = Utils.getPixel(height / 12, room.getPosAY(), room.getPosBY());
-//                } else {
-//                    devicePosX = Utils.getPixel(width / 12, room.getPosAX(), room.getPosBX());
-//                    devicePosY = Utils.getPixel(height / 12, room.getPosAY(), room.getPosBY());
-//                }
-//            }
-//        }
     }
 
 
@@ -422,16 +430,6 @@ public class MapFragment extends Fragment {
         protected Void doInBackground(Void... params) {
             while (stopTask == false) {
                 SystemClock.sleep(6000);
-                Bundle bundle = fragment.getArguments();
-                if (bundle != null) {
-                    deviceLat = bundle.getDouble("LAT");
-                    deviceLong = bundle.getDouble("LONG");
-                }
-
-                getPointMap(latitude, longitude, false);
-                if (deviceLat != 0 || deviceLong != 0) {
-                    getPointMap(deviceLat, deviceLong, true);
-                }
                 publishProgress();
             }
             return null;
