@@ -1,8 +1,5 @@
 package com.example.project.mobilecapstone.Utils;
 
-import android.os.Debug;
-import android.util.Log;
-
 import com.example.project.mobilecapstone.Data.Corner;
 
 /**
@@ -61,14 +58,10 @@ public class Utils {
     }
 
     public static double getPixelWithPer(double perpendicular, double currentDistance) {
-        Log.d("current ", currentDistance + "");
         double temp = Math.pow(currentDistance, 2);
-        Log.d("temp0 ", temp + "");
         temp = temp - Math.pow(perpendicular, 2);
-        Log.d("temp ", temp + "");
         temp = Math.abs(temp);
         double result = Math.sqrt(temp);
-        Log.d("result ", result + "");
 
         return result;
     }
