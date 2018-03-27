@@ -98,7 +98,7 @@ public class MapFragment extends Fragment {
         new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
 
 
-        new GetListMap().execute();
+        new GetListMap().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         do {
 
         } while (!result.equals("Finish"));
@@ -198,13 +198,14 @@ public class MapFragment extends Fragment {
             if (gps.canGetLocation()) {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
-                altitude = gps.getAltitude();
+//                altitude = gps.getAltitude();
+                altitude = 6.8;
 //            latitude = 10.8529728;
 //            longitude = 106.6295536;
             } else {
                 gps.showSettingAlert();
             }
-            String filename = "";
+            String filename = "Floor12";
             Bitmap map;
             Bitmap scaleMap;
             //get location from GPSRouter class
@@ -253,8 +254,9 @@ public class MapFragment extends Fragment {
                 deviceLat = bundle.getDouble("LAT");
                 deviceLong = bundle.getDouble("LONG");
             }
-
-            getPointMap(latitude, longitude, false);
+            if (corners != null) {
+                getPointMap(latitude, longitude, false);
+            }
             if (deviceLat != 0 || deviceLong != 0) {
                 getPointMap(deviceLat, deviceLong, true);
             }
@@ -319,7 +321,7 @@ public class MapFragment extends Fragment {
             } else if (corner == 3) {
                 currentCorner1 = corners[2];
                 currentCorner2 = corners[3];
-                double distance2 = (float) Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double temp = Utils.getPixelWithPer(min, distance2);
@@ -447,7 +449,7 @@ public class MapFragment extends Fragment {
                         corners = new Corner[total];
                         for (int i = 0; i < total; i++) {
                             JSONObject jsonObject = new JSONObject(list.get(i).toString());
-                            Corner newCorner = new Corner(jsonObject.getInt("MapId"), jsonObject.getString("Desciption"),
+                            Corner newCorner = new Corner(jsonObject.getInt("MapId"), jsonObject.getString("Description"),
                                     jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"),
                                     jsonObject.getInt("Id"), jsonObject.getInt("Floor"), jsonObject.getInt("Position"));
                             corners[i] = newCorner;
@@ -459,11 +461,11 @@ public class MapFragment extends Fragment {
                 }
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
-                Log.e(TAG, "doInBackground: ",e );
+                Log.e(TAG, "doInBackground: ", e);
                 e.printStackTrace();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
-                Log.e(TAG, "doInBackground: ",e );
+                Log.e(TAG, "doInBackground: ", e);
                 e.printStackTrace();
             }
             return null;
@@ -490,8 +492,8 @@ public class MapFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... params) {
             while (stopTask == false) {
-                SystemClock.sleep(6000);
                 publishProgress();
+                SystemClock.sleep(6000);
             }
             return null;
         }

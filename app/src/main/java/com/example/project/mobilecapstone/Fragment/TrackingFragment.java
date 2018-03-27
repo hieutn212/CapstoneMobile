@@ -321,8 +321,8 @@ public class TrackingFragment extends Fragment {
                 String device = responseOutput.toString();
                 double latitude = new JSONObject(device).getDouble("Latitude");
                 double longitude = new JSONObject(device).getDouble("Longitude");
-//                longitude = 106.6296557;
-//                latitude = 10.8530122;
+                longitude = 106.6295536;
+                latitude = 10.8529728;
                 Log.e(TAG, "onPostExecute: " + latitude + longitude);
                 Bundle bundle = new Bundle();
                 bundle.putDouble("LAT", latitude);
