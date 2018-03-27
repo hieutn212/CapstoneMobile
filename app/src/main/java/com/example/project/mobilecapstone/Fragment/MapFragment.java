@@ -59,25 +59,19 @@ public class MapFragment extends Fragment {
     static double deviceLong = 0;
     static float devicePosX = 0;
     static float devicePosY = 0;
-<<<<<<< HEAD
     private String currentFloor = "";
     public static Room[] rooms = null;
     public static Corner[] corners = null;
 
-=======
     ArrayList<String> listMap = new ArrayList<String>();
     Integer buildingId;
     private DownloadManager downloadManager;
->>>>>>> c21cfa9dda2856313a4fbe80978e5bacf8cf05f1
     static int width = 0;
     static int height = 0;
     private static final String TAG = "MapFragment";
     CanvasMapView canvasMapView;
-<<<<<<< HEAD
     Fragment fragment;
-=======
     private String result = "";
->>>>>>> c21cfa9dda2856313a4fbe80978e5bacf8cf05f1
 //    private String isMoving;
 //    private Sensor mySensor;
 //    private SensorManager SM;
@@ -100,11 +94,9 @@ public class MapFragment extends Fragment {
 //
 //        //register sensor listener
 //        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
-<<<<<<< HEAD
         new CanvasAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
         new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-=======
 
 
         new GetListMap().execute();
@@ -112,8 +104,6 @@ public class MapFragment extends Fragment {
 
         }while (!result.equals("Finish"));
         this.getArguments();
-        new CanvasAsyTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
->>>>>>> c21cfa9dda2856313a4fbe80978e5bacf8cf05f1
         getActivity();
         fragment = this;
         // Inflate the layout for this fragment
@@ -197,9 +187,6 @@ public class MapFragment extends Fragment {
             super.onDraw(canvas);
             height = getHeight();
             width = getWidth();
-<<<<<<< HEAD
-            Bitmap scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
-            canvas.drawBitmap(scaleMap, 0, 0, null);
             if (first) {
                 first = false;
                 new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
@@ -209,13 +196,19 @@ public class MapFragment extends Fragment {
             //get location from GPSRouter class
             Context context = this.getContext();
             gps = new GPSRouter(context);
-=======
+            if (gps.canGetLocation()) {
+                latitude = gps.getLatitude();
+                longitude = gps.getLongitude();
+                altitude = gps.getAltitude();
+//            latitude = 10.8529728;
+//            longitude = 106.6295536;
+            } else {
+                gps.showSettingAlert();
+            }
             String filename = "";
             Bitmap map;
             Bitmap scaleMap;
             //get location from GPSRouter class
-            Context context = this.getContext();
-            gps = new GPSRouter(context);
             for (int i = 0; i < listMap.size(); i++) {
                 try {
                     double altitudeMap1 = new JSONObject(listMap.get(i)).getDouble("Altitide");
@@ -223,16 +216,20 @@ public class MapFragment extends Fragment {
                     String nameMap = new JSONObject(listMap.get(i)).getString("Name");
                     if (i < listMap.size()-1) {
                         altitudeMap2 = new JSONObject(listMap.get(i + 1)).getDouble("Altitide");
-                        if (gps.getAltitude() == 0.0) {
+                        if (altitude == 0.0) {
                             filename = "floor1";
                             break;
                         }
-                        else if (altitudeMap1 <= gps.getAltitude() && gps.getAltitude() < altitudeMap2) {
+                        else if (altitudeMap1 <= altitude && altitude < altitudeMap2) {
                             filename = nameMap;
+                            new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
+                            new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
                             break;
                         }
                     } else {
-                        if (altitudeMap1 <= gps.getAltitude()) {
+                        if (altitudeMap1 <= altitude) {
+                            new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
+                            new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
                             filename = nameMap;
                             break;
                         }
@@ -242,27 +239,6 @@ public class MapFragment extends Fragment {
                     e.printStackTrace();
                 }
             }
-//
-
-//            if (6.8 <= gps.getAltitude() && gps.getAltitude() < 9.9) {
-//                //map = BitmapFactory.decodeResource(getResources(), R.drawable.floorg1);
-//                filename = "floorg1";
-//            } else if (9.9 <= gps.getAltitude() && gps.getAltitude() < 13.3){
-//               // map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
-//                filename = "floor1";
-//            } else if (13.3 <= gps.getAltitude() && gps.getAltitude() < 17.3){
-//                //map = BitmapFactory.decodeResource(getResources(), R.drawable.floor2);
-//                filename = "floor2";
-//            }else if (17.3 <= gps.getAltitude() && gps.getAltitude() < 20.4){
-//                //map = BitmapFactory.decodeResource(getResources(), R.drawable.floor3);
-//                filename = "floor3";
-//            }else if (20.4 <= gps.getAltitude() && gps.getAltitude() < 24.3){
-//                //map = BitmapFactory.decodeResource(getResources(), R.drawable.floor4);
-//                filename = "floor4";
-//            }else {
-//               // map = BitmapFactory.decodeResource(getResources(), R.drawable.floor5);
-//                filename = "floor5";
-//            }
             String path = Environment.getExternalStorageDirectory() + "/Download/" + filename + ".png";
             File temp = new File(Environment.getExternalStorageDirectory() + "/Download/" + filename + ".png");
             do{
@@ -273,16 +249,7 @@ public class MapFragment extends Fragment {
             map = BitmapFactory.decodeFile(path);
             scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
->>>>>>> c21cfa9dda2856313a4fbe80978e5bacf8cf05f1
-            if (gps.canGetLocation()) {
-                latitude = gps.getLatitude();
-                longitude = gps.getLongitude();
-                altitude = gps.getAltitude();
-//            latitude = 10.8529728;
-//            longitude = 106.6295536;
-            } else {
-                gps.showSettingAlert();
-            }
+
             Bundle bundle = fragment.getArguments();
             if (bundle != null) {
                 deviceLat = bundle.getDouble("LAT");
