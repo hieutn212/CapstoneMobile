@@ -5,43 +5,41 @@ package com.example.project.mobilecapstone.Data;
  */
 
 public class Corner {
-    private float x;
-    private float y;
-    private String name;
-    private int color;
+    private int mapId;
+    private String description;
     private double longitude;
     private double latitude;
+    private int id;
+    private int floor;
+    private int position;
 
-    public float getX() {
-        return x;
+    public Corner() {
     }
 
-    public void setX(float x) {
-        this.x = x;
+    public Corner(int mapId, String description, double longitude, double latitude, int id, int floor, int position) {
+        this.mapId = mapId;
+        this.description = description;
+        this.longitude = longitude;
+        this.latitude = latitude;
+        this.id = id;
+        this.floor = floor;
+        this.position = position;
     }
 
-    public float getY() {
-        return y;
+    public int getMapId() {
+        return mapId;
     }
 
-    public void setY(float y) {
-        this.y = y;
+    public void setMapId(int mapId) {
+        this.mapId = mapId;
     }
 
-    public String getName() {
-        return name;
+    public String getDescription() {
+        return description;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getColor() {
-        return color;
-    }
-
-    public void setColor(int color) {
-        this.color = color;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public double getLongitude() {
@@ -58,5 +56,29 @@ public class Corner {
 
     public void setLatitude(double latitude) {
         this.latitude = latitude;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getFloor() {
+        return floor;
+    }
+
+    public void setFloor(int floor) {
+        this.floor = floor;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
     }
 }
