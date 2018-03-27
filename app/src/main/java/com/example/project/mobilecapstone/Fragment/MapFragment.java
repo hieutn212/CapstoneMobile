@@ -94,14 +94,14 @@ public class MapFragment extends Fragment {
 //        //register sensor listener
 //        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
         new CanvasAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-        new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+//        new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
+//        new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
 
 
         new GetListMap().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        do {
-
-        } while (!result.equals("Finish"));
+//        do {
+//
+//        } while (!result.equals("Finish"));
         this.getArguments();
         getActivity();
         fragment = this;
@@ -168,7 +168,6 @@ public class MapFragment extends Fragment {
     //create View with Canvas for map
     private class CanvasMapView extends View {
         Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        Bitmap map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
         boolean first = true;
 
         public CanvasMapView(Context context) {
@@ -186,11 +185,6 @@ public class MapFragment extends Fragment {
             super.onDraw(canvas);
             height = getHeight();
             width = getWidth();
-            if (first) {
-                first = false;
-                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-            }
 
             //get location from GPSRouter class
             Context context = this.getContext();
@@ -209,6 +203,9 @@ public class MapFragment extends Fragment {
             Bitmap map;
             Bitmap scaleMap;
             //get location from GPSRouter class
+            if(listMap.size()<= 1){
+                int test = 1;
+            }
             for (int i = 0; i < listMap.size(); i++) {
                 try {
                     double altitudeMap1 = new JSONObject(listMap.get(i)).getDouble("Altitide");
@@ -238,36 +235,44 @@ public class MapFragment extends Fragment {
                     e.printStackTrace();
                 }
             }
+//            if (first) {
+//                first = false;
+//                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
+//                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+//            }
             String path = sharedData.storage + filename + ".png";
             File temp = new File(sharedData.storage + filename + ".png");
-            do {
-
-            } while (!temp.exists());
+//            do {
+//
+//            } while (!temp.exists());
             //log 4 test
             Log.e(TAG, "onDraw: DECODE FILE PATH" + path);
+
             map = BitmapFactory.decodeFile(path);
             scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
-
-            Bundle bundle = fragment.getArguments();
-            if (bundle != null) {
-                deviceLat = bundle.getDouble("LAT");
-                deviceLong = bundle.getDouble("LONG");
+            if (first == false) {
+                Bundle bundle = fragment.getArguments();
+                if (bundle != null) {
+                    deviceLat = bundle.getDouble("LAT");
+                    deviceLong = bundle.getDouble("LONG");
+                }
+                if (corners != null && corners.length == 4) {
+                    getPointMap(latitude, longitude, false);
+                }
+                if (deviceLat != 0 || deviceLong != 0) {
+                    getPointMap(deviceLat, deviceLong, true);
+                }
+                if (posX != 0 || posY != 0) {
+                    mPaint.setColor(Color.BLUE);
+                    canvas.drawCircle(posX, posY, 10, mPaint);
+                }
+                if (devicePosX != 0 || devicePosY != 0) {
+                    mPaint.setColor(Color.GREEN);
+                    canvas.drawCircle(devicePosX, devicePosY, 10, mPaint);
+                }
             }
-            if (corners != null) {
-                getPointMap(latitude, longitude, false);
-            }
-            if (deviceLat != 0 || deviceLong != 0) {
-                getPointMap(deviceLat, deviceLong, true);
-            }
-            if (posX != 0 || posY != 0) {
-                mPaint.setColor(Color.BLUE);
-                canvas.drawCircle(posX, posY, 10, mPaint);
-            }
-            if (devicePosX != 0 || devicePosY != 0) {
-                mPaint.setColor(Color.GREEN);
-                canvas.drawCircle(devicePosX, devicePosY, 10, mPaint);
-            }
+            first = false;
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +
                             latitude + "\nLong: " + longitude + "\nAlt: " + gps.getAltitude(),
                     Toast.LENGTH_LONG).show();
@@ -311,12 +316,12 @@ public class MapFragment extends Fragment {
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double temp = Utils.getPixelWithPer(min, distance2);
-                posY = (float) (height / distanceCorner * temp);
+                devicePosY = (float) (height / distanceCorner * temp);
                 currentCorner2 = corners[2];
                 distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
                 double x = min + 3;
-                posX = (float) (width / distanceCorner * x);
+                devicePosX = (float) (width / distanceCorner * x);
 //                posX = width / 18 * ((float) (rooms[0].getWidth()));
             } else if (corner == 3) {
                 currentCorner1 = corners[2];
@@ -492,8 +497,8 @@ public class MapFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... params) {
             while (stopTask == false) {
-                publishProgress();
                 SystemClock.sleep(6000);
+                publishProgress();
             }
             return null;
         }
