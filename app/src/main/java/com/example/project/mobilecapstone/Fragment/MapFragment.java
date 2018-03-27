@@ -11,7 +11,6 @@ import android.graphics.Paint;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -102,7 +101,7 @@ public class MapFragment extends Fragment {
         new GetListMap().execute();
         do {
 
-        }while (!result.equals("Finish"));
+        } while (!result.equals("Finish"));
         this.getArguments();
         getActivity();
         fragment = this;
@@ -214,13 +213,12 @@ public class MapFragment extends Fragment {
                     double altitudeMap1 = new JSONObject(listMap.get(i)).getDouble("Altitide");
                     double altitudeMap2 = 0.0;
                     String nameMap = new JSONObject(listMap.get(i)).getString("Name");
-                    if (i < listMap.size()-1) {
+                    if (i < listMap.size() - 1) {
                         altitudeMap2 = new JSONObject(listMap.get(i + 1)).getDouble("Altitide");
                         if (altitude == 0.0) {
                             filename = "floor1";
                             break;
-                        }
-                        else if (altitudeMap1 <= altitude && altitude < altitudeMap2) {
+                        } else if (altitudeMap1 <= altitude && altitude < altitudeMap2) {
                             filename = nameMap;
                             new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
                             new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
@@ -239,13 +237,13 @@ public class MapFragment extends Fragment {
                     e.printStackTrace();
                 }
             }
-            String path = Environment.getExternalStorageDirectory() + "/Download/" + filename + ".png";
-            File temp = new File(Environment.getExternalStorageDirectory() + "/Download/" + filename + ".png");
-            do{
+            String path = sharedData.storage + filename + ".png";
+            File temp = new File(sharedData.storage + filename + ".png");
+            do {
 
-            }while (!temp.exists());
+            } while (!temp.exists());
             //log 4 test
-            Log.e(TAG, "onDraw: DECODE FILE PATH" + path );
+            Log.e(TAG, "onDraw: DECODE FILE PATH" + path);
             map = BitmapFactory.decodeFile(path);
             scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
@@ -449,20 +447,23 @@ public class MapFragment extends Fragment {
                         corners = new Corner[total];
                         for (int i = 0; i < total; i++) {
                             JSONObject jsonObject = new JSONObject(list.get(i).toString());
-                            Corner newCorner = new Corner(jsonObject.getInt("MapId"), jsonObject.getString("Description"),
+                            Corner newCorner = new Corner(jsonObject.getInt("MapId"), jsonObject.getString("Desciption"),
                                     jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"),
                                     jsonObject.getInt("Id"), jsonObject.getInt("Floor"), jsonObject.getInt("Position"));
                             corners[i] = newCorner;
                         }
                     } catch (JSONException e) {
+                        Log.e(TAG, "doInBackground: CORNER", e);
                         e.printStackTrace();
                     }
                 }
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
+                Log.e(TAG, "doInBackground: ",e );
                 e.printStackTrace();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
+                Log.e(TAG, "doInBackground: ",e );
                 e.printStackTrace();
             }
             return null;
@@ -535,15 +536,18 @@ public class MapFragment extends Fragment {
                 br.close();
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     convertToArray(responseOutput.toString());
-                    File SDCardRoot = Environment.getExternalStorageDirectory();
+                    File dir = new File(sharedData.storage);
+                    if (!dir.isDirectory()) {
+                        dir.mkdir();
+                    }
                     for (int i = 0; i < listMap.size(); i++) {
-                        String urlMap = "http://"+sharedData.IP+":57305/" + new JSONObject(listMap.get(i)).getString("MapUrl");
+                        String urlMap = "http://" + sharedData.IP + ":57305/" + new JSONObject(listMap.get(i)).getString("MapUrl");
                         String nameMap = new JSONObject(listMap.get(i)).getString("Name");
 
                         //log 4 test
-                        Log.e(TAG, "doInBackground: PATH CHECK"+SDCardRoot + "/Download/" + nameMap );
+                        Log.e(TAG, "doInBackground: PATH CHECK" + sharedData.storage + nameMap);
 
-                        File checkFile = new File(SDCardRoot + "/Download/" + nameMap + ".png");
+                        File checkFile = new File(sharedData.storage + nameMap + ".png");
                         if (!checkFile.exists()) {
                             DownloadMap(urlMap, nameMap);
                         }
@@ -581,10 +585,9 @@ public class MapFragment extends Fragment {
 
     public void DownloadMap(String urlMap, String nameMap) {
         downloadManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
-
         Uri uri = Uri.parse(urlMap);
         DownloadManager.Request request = new DownloadManager.Request(uri);
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, nameMap+".png");
+        request.setDestinationInExternalPublicDir("/LOAB", nameMap + ".png");
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         Long reference = downloadManager.enqueue(request);
     }
