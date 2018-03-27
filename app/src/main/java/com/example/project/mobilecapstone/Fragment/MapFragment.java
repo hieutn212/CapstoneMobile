@@ -170,29 +170,12 @@ public class MapFragment extends Fragment {
             Bitmap map;
             Bitmap scaleMap;
             if (first) {
-                initCorner();
                 first = false;
             }
             new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
             //get location from GPSRouter class
             Context context = this.getContext();
             gps = new GPSRouter(context);
-            if (gps.getAltitude() <= 6.5) {
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floorG1);
-            } else if (gps.getAltitude() <= 12.3){
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
-            } else if (gps.getAltitude() <= 16.1){
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor2);
-            }else if (gps.getAltitude() <= 19.39){
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor3);
-            }else if (gps.getAltitude() <= 22.5){
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor4);
-            }else {
-                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor5);
-            }
-            scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
-
-            canvas.drawBitmap(scaleMap, 0, 0, null);
 
             if (gps.canGetLocation()) {
 //            latitude = 10.8530167;
@@ -203,6 +186,22 @@ public class MapFragment extends Fragment {
             } else {
                 gps.showSettingAlert();
             }
+            if (altitude <= 6.5) {
+                map = BitmapFactory.decodeResource(getResources(), R.drawable.floorG1);
+            } else if (altitude <= 12.3){
+                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
+            } else if (altitude <= 16.1){
+                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor2);
+            }else if (altitude <= 19.39){
+                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor3);
+            }else if (altitude <= 22.5){
+                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor4);
+            }else {
+                map = BitmapFactory.decodeResource(getResources(), R.drawable.floor5);
+            }
+            scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
+
+            canvas.drawBitmap(scaleMap, 0, 0, null);
             if (posX != 0 || posY != 0) {
                 mPaint.setColor(Color.BLUE);
                 canvas.drawCircle(posX, posY, 10, mPaint);
@@ -301,11 +300,11 @@ public class MapFragment extends Fragment {
         }
     }
 
-    public class CanvasAsyTask extends AsyncTask<Void, Double, Void> {
+    public class CanvasAsyncTask extends AsyncTask<Void, Double, Void> {
 
         private MapFragment fragment;
 
-        public CanvasAsyTask(MapFragment fragment) {
+        public CanvasAsyncTask(MapFragment fragment) {
             this.fragment = fragment;
         }
 //        private Activity activity;
