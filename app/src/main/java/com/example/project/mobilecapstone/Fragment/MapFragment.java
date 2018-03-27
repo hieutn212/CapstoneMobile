@@ -203,7 +203,7 @@ public class MapFragment extends Fragment {
             Bitmap map;
             Bitmap scaleMap;
             //get location from GPSRouter class
-            if(listMap.size()<= 1){
+            if (listMap.size() <= 1) {
                 int test = 1;
             }
             for (int i = 0; i < listMap.size(); i++) {
@@ -257,9 +257,7 @@ public class MapFragment extends Fragment {
                     deviceLat = bundle.getDouble("LAT");
                     deviceLong = bundle.getDouble("LONG");
                 }
-                if (corners != null && corners.length == 4) {
-                    getPointMap(latitude, longitude, false);
-                }
+                getPointMap(latitude, longitude, false);
                 if (deviceLat != 0 || deviceLong != 0) {
                     getPointMap(deviceLat, deviceLong, true);
                 }
@@ -272,7 +270,9 @@ public class MapFragment extends Fragment {
                     canvas.drawCircle(devicePosX, devicePosY, 10, mPaint);
                 }
             }
-            first = false;
+            if (corners != null && corners.length == 4) {
+                first = false;
+            }
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +
                             latitude + "\nLong: " + longitude + "\nAlt: " + gps.getAltitude(),
                     Toast.LENGTH_LONG).show();
