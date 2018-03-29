@@ -200,12 +200,9 @@ public class MapFragment extends Fragment {
                 gps.showSettingAlert();
             }
             String filename = "Floor12";
-            Bitmap map;
+            Bitmap map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
             Bitmap scaleMap;
             //get location from GPSRouter class
-            if (listMap.size() <= 1) {
-                int test = 1;
-            }
             for (int i = 0; i < listMap.size(); i++) {
                 try {
                     double altitudeMap1 = new JSONObject(listMap.get(i)).getDouble("Altitide");
@@ -252,6 +249,7 @@ public class MapFragment extends Fragment {
             scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
             if (first == false) {
+
                 Bundle bundle = fragment.getArguments();
                 if (bundle != null) {
                     deviceLat = bundle.getDouble("LAT");
@@ -273,8 +271,9 @@ public class MapFragment extends Fragment {
             if (corners != null && corners.length == 4) {
                 first = false;
             }
+
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +
-                            latitude + "\nLong: " + longitude + "\nAlt: " + gps.getAltitude(),
+                            latitude + "\nLong: " + longitude + "\nFloor: " + filename,
                     Toast.LENGTH_LONG).show();
         }
 
