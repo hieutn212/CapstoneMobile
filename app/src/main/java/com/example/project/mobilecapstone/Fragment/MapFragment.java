@@ -335,6 +335,30 @@ public class MapFragment extends Fragment {
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
                 double x = distanceCorner - (min + 3);
                 posX = (float) (width / distanceCorner * x);
+            } else if (corner == 2) {
+                currentCorner1 = corners[2];
+                currentCorner2 = corners[1];
+                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
+                        currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double temp = Utils.getPixelWithPer(min, distance2) + 3;
+                posY = (float) (height / distanceCorner * temp);
+                currentCorner2 = corners[3];
+                distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
+                        currentCorner2.getLatitude(), currentCorner2.getLongitude());
+                posX = (float) (width / distanceCorner * min);
+            } else if (corner == 4) {
+                currentCorner1 = corners[3];
+                currentCorner2 = corners[0];
+                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
+                        currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double temp = Utils.getPixelWithPer(min, distance2);
+                posY = (float) (height / distanceCorner * temp)  + 3;
+                currentCorner2 = corners[2];
+                distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
+                        currentCorner2.getLatitude(), currentCorner2.getLongitude());
+                posX = (float) (width / distanceCorner * min);
             }
         } else {
             if (corner == 1) {
