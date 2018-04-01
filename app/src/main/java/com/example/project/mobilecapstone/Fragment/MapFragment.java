@@ -18,6 +18,8 @@ import android.support.v4.app.Fragment;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -26,6 +28,7 @@ import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Data.Corner;
 import com.example.project.mobilecapstone.Data.Room;
+import com.example.project.mobilecapstone.Activity.MapsActivity;
 import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.MapSearchActivity;
 import com.example.project.mobilecapstone.R;
@@ -151,8 +154,8 @@ public class MapFragment extends Fragment implements View.OnClickListener{
             if(resultCode == 1){
                 //Draw a room point
                 data.getIntExtra("PosAX",0);
-                roomPosX = Utils.getPixel(width / 12, data.getIntExtra("PosAX", 0), data.getIntExtra("PosBX",0));
-                roomPosY = Utils.getPixel(width / 12, data.getIntExtra("PosAY", 0), data.getIntExtra("PosBY",0));
+                roomPosX = Utils.getPixel(width / 12, data.getIntExtra("PosAX", 0)  , data.getIntExtra("PosBX",0));
+                roomPosY = Utils.getPixel(width / 12, data.getIntExtra("PosAY", 0) , data.getIntExtra("PosBY",0) );
 
             }
             if (resultCode == 0) {
@@ -311,7 +314,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
             }
             if(roomPosX !=0 || roomPosY !=0){
                 mPaint.setColor(Color.RED);
-                canvas.drawCircle(roomPosX, roomPosY,10, mPaint);
+                canvas.drawCircle(roomPosX , roomPosY,10, mPaint);
             }
             if (corners != null && corners.length == 4) {
                 first = false;
