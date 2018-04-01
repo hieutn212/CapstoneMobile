@@ -3,6 +3,7 @@ package com.example.project.mobilecapstone.Fragment;
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -19,12 +20,14 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Data.Corner;
 import com.example.project.mobilecapstone.Data.Room;
 import com.example.project.mobilecapstone.Data.sharedData;
+import com.example.project.mobilecapstone.MapSearchActivity;
 import com.example.project.mobilecapstone.R;
 import com.example.project.mobilecapstone.Utils.GPSRouter;
 import com.example.project.mobilecapstone.Utils.Utils;
@@ -45,7 +48,7 @@ import java.util.ArrayList;
 import javax.net.ssl.HttpsURLConnection;
 
 
-public class MapFragment extends Fragment {
+public class MapFragment extends Fragment implements View.OnClickListener{
 
     public boolean stopTask = false;
     GPSRouter gps;
@@ -62,6 +65,9 @@ public class MapFragment extends Fragment {
     public static Room[] rooms = null;
     public static Corner[] corners = null;
 
+    static float roomPosX = 0;
+    static float roomPosY = 0;
+
     ArrayList<String> listMap = new ArrayList<String>();
     Integer buildingId;
     private DownloadManager downloadManager;
@@ -69,6 +75,9 @@ public class MapFragment extends Fragment {
     static int height = 0;
     private static final String TAG = "MapFragment";
     CanvasMapView canvasMapView;
+
+    Button btnSearch;
+    private static final int REQUEST_CODE_ROOM = 0x9345;
     Fragment fragment;
     private String result = "";
 //    private String isMoving;
@@ -108,9 +117,11 @@ public class MapFragment extends Fragment {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_map, container, false);
         //assign text view
-
+        btnSearch =(Button) v.findViewById(R.id.buttonSearch);
+        btnSearch.setOnClickListener((View.OnClickListener) this);
 //        accelLast = SM.GRAVITY_EARTH;
 //        accelCurrent = SM.GRAVITY_EARTH;
+
 
         FrameLayout layout = v.findViewById(R.id.canvasView);
         canvasMapView = new CanvasMapView(getContext());
@@ -118,6 +129,36 @@ public class MapFragment extends Fragment {
         layout.addView(canvasMapView);
         stopTask = false;
         return v;
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.buttonSearch:
+                Intent i = new Intent(getActivity(), MapSearchActivity.class);
+                startActivityForResult(i, REQUEST_CODE_ROOM);
+                break;
+        }
+
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==REQUEST_CODE_ROOM)
+        {
+            if(resultCode == 1){
+                //Draw a room point
+                data.getIntExtra("PosAX",0);
+                roomPosX = Utils.getPixel(width / 12, data.getIntExtra("PosAX", 0), data.getIntExtra("PosBX",0));
+                roomPosY = Utils.getPixel(width / 12, data.getIntExtra("PosAY", 0), data.getIntExtra("PosBY",0));
+
+            }
+            if (resultCode == 0) {
+                //Write your code if there's no result
+            }
+        }
     }
 
     @Override
@@ -268,12 +309,16 @@ public class MapFragment extends Fragment {
                     canvas.drawCircle(devicePosX, devicePosY, 10, mPaint);
                 }
             }
+            if(roomPosX !=0 || roomPosY !=0){
+                mPaint.setColor(Color.RED);
+                canvas.drawCircle(roomPosX, roomPosY,10, mPaint);
+            }
             if (corners != null && corners.length == 4) {
                 first = false;
             }
 
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +
-                            latitude + "\nLong: " + longitude + "\nFloor: " + filename,
+                            latitude + "\nLong: " + longitude,
                     Toast.LENGTH_LONG).show();
         }
 
@@ -284,7 +329,6 @@ public class MapFragment extends Fragment {
             mPaint.setStrokeCap(Paint.Cap.ROUND); // Cho dau cac duong ve duoc bo tron
             mPaint.setAlpha(150);
         }
-
     }
 
     public static void getPointMap(double latitude, double longitude, boolean isDevice) {
