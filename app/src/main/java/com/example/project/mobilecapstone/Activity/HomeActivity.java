@@ -18,6 +18,8 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Data.UserInfo;
@@ -38,20 +40,32 @@ public class HomeActivity extends AppCompatActivity
         setContentView(R.layout.activity_home);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-
         //get information from loginactivity
         getUserInfo();
-
+        //navigation View
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        // Navigation View Header
+        View headerView = navigationView.getHeaderView(0);
+        // Header elements
+        TextView txtUsername = headerView.findViewById(R.id.txtUsernameNav);
+        TextView txtFullname = headerView.findViewById(R.id.txtFullnameNav);
+        // Set username & fullname
+        txtUsername.setText(userInfo.getUserName());
+        txtFullname.setText(userInfo.getFullName());
+        //check for permissions
+        checkPermissions();
+        fm.beginTransaction().replace(R.id.content_main, new MapFragment()).commit();
+        //set home fragment selected on launch
 
+    }
 
+    private void checkPermissions(){
         if (ContextCompat.checkSelfPermission(HomeActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
         } else {
             requestLocationPermission();
@@ -62,9 +76,15 @@ public class HomeActivity extends AppCompatActivity
             requestInternetPermission();
         }
 
-        fm.beginTransaction().replace(R.id.content_main, new MapFragment()).commit();
-        //set home fragment selected on launch
+        if (ContextCompat.checkSelfPermission(HomeActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        } else {
+            requestReadPermission();
+        }
 
+        if (ContextCompat.checkSelfPermission(HomeActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        } else {
+            requestWritePermission();
+        }
     }
 
     //Request user for internet permission
@@ -88,7 +108,6 @@ public class HomeActivity extends AppCompatActivity
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, 1);
         }
     }
-
     //Request user for location permission
     private void requestLocationPermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
@@ -110,7 +129,48 @@ public class HomeActivity extends AppCompatActivity
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
         }
     }
-
+    //request user to read storage
+    private void requestReadPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            new AlertDialog.Builder(this).setTitle("Permission needed")
+                    .setMessage("This permission is needed for the functions to work")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            ActivityCompat.requestPermissions(HomeActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 3);
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    }).create().show();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 3);
+        }
+    }
+    //request user to write storage
+    private void requestWritePermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            new AlertDialog.Builder(this).setTitle("Permission needed")
+                    .setMessage("This permission is needed for the functions to work")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            ActivityCompat.requestPermissions(HomeActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 4);
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    }).create().show();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 4);
+        }
+    }
     //Notify user about requested permission
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -126,6 +186,20 @@ public class HomeActivity extends AppCompatActivity
                 Toast.makeText(this, "thank you", Toast.LENGTH_SHORT);
             } else {
                 Toast.makeText(this, "Denied permission to user location data", Toast.LENGTH_SHORT);
+            }
+        }
+        if (requestCode == 3) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "thank you", Toast.LENGTH_SHORT);
+            } else {
+                Toast.makeText(this, "Denied permission to read from storage", Toast.LENGTH_SHORT);
+            }
+        }
+        if (requestCode == 4) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "thank you", Toast.LENGTH_SHORT);
+            } else {
+                Toast.makeText(this, "Denied permission to write to storage", Toast.LENGTH_SHORT);
             }
         }
     }

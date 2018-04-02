@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -18,8 +19,6 @@ import android.support.v4.app.Fragment;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -28,7 +27,6 @@ import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Data.Corner;
 import com.example.project.mobilecapstone.Data.Room;
-import com.example.project.mobilecapstone.Activity.MapsActivity;
 import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.MapSearchActivity;
 import com.example.project.mobilecapstone.R;
@@ -67,10 +65,10 @@ public class MapFragment extends Fragment implements View.OnClickListener{
     private String currentFloor = "";
     public static Room[] rooms = null;
     public static Corner[] corners = null;
-
     static float roomPosX = 0;
     static float roomPosY = 0;
-
+    SharedPreferences sharedPreference;
+    SharedPreferences.Editor editor;
     ArrayList<String> listMap = new ArrayList<String>();
     Integer buildingId;
     private DownloadManager downloadManager;
@@ -78,7 +76,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
     static int height = 0;
     private static final String TAG = "MapFragment";
     CanvasMapView canvasMapView;
-
+    View v;
     Button btnSearch;
     private static final int REQUEST_CODE_ROOM = 0x9345;
     Fragment fragment;
@@ -105,32 +103,26 @@ public class MapFragment extends Fragment implements View.OnClickListener{
 //
 //        //register sensor listener
 //        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
-        new CanvasAsyncTask(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        downloadManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
+        sharedPreference = getActivity().getSharedPreferences("ROOM_CORNER_INFO",getActivity().MODE_PRIVATE);
+        editor = sharedPreference.edit();
+        new GetListMap().execute();
+        /*do {
+
+        } while (!result.equals("Finish"));*/
+        new CanvasAsyncTask(MapFragment.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 //        new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
 //        new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-
-
-        new GetListMap().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-//        do {
-//
-//        } while (!result.equals("Finish"));
         this.getArguments();
         getActivity();
         fragment = this;
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_map, container, false);
+        v = inflater.inflate(R.layout.fragment_map, container, false);
         //assign text view
-        btnSearch =(Button) v.findViewById(R.id.buttonSearch);
-        btnSearch.setOnClickListener((View.OnClickListener) this);
+        btnSearch = v.findViewById(R.id.buttonSearch);
+        btnSearch.setOnClickListener(this);
 //        accelLast = SM.GRAVITY_EARTH;
 //        accelCurrent = SM.GRAVITY_EARTH;
-
-
-        FrameLayout layout = v.findViewById(R.id.canvasView);
-        canvasMapView = new CanvasMapView(getContext());
-        canvasMapView.setId(R.id.viewCanvas);
-        layout.addView(canvasMapView);
-        stopTask = false;
         return v;
     }
 
@@ -167,6 +159,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
     }
 
 //    @Override
@@ -237,14 +230,14 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
 //                altitude = gps.getAltitude();
-                altitude = 6.8;
+                altitude = 15.0;
 //            latitude = 10.8529728;
 //            longitude = 106.6295536;
             } else {
                 gps.showSettingAlert();
             }
-            String filename = "Floor12";
-            Bitmap map = BitmapFactory.decodeResource(getResources(), R.drawable.floor1);
+            String filename = "floor1";
+            Bitmap map ;
             Bitmap scaleMap;
             //get location from GPSRouter class
             for (int i = 0; i < listMap.size(); i++) {
@@ -259,15 +252,33 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                             break;
                         } else if (altitudeMap1 <= altitude && altitude < altitudeMap2) {
                             filename = nameMap;
-                            new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-                            new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                            currentFloor = filename.substring(filename.length()-1);
+                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR",""))){
+                                String roomJson = sharedPreference.getString("ROOMLIST",null);
+                                String cornerJson = sharedPreference.getString("CORNERLIST",null);
+                                convertToCornerArray(cornerJson);
+                                convertToRoomArray(roomJson);
+                            }else{
+                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
+                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                                editor.putString("LASTFLOOR",currentFloor).apply();
+                            }
                             break;
                         }
                     } else {
                         if (altitudeMap1 <= altitude) {
-                            new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-                            new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
                             filename = nameMap;
+                            currentFloor = filename.substring(filename.length()-1);
+                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR",""))){
+                                String roomJson = sharedPreference.getString("ROOMLIST",null);
+                                String cornerJson = sharedPreference.getString("CORNERLIST",null);
+                                convertToCornerArray(cornerJson);
+                                convertToRoomArray(roomJson);
+                            }else{
+                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
+                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                                editor.putString("LASTFLOOR",currentFloor).apply();
+                            }
                             break;
                         }
                     }
@@ -282,13 +293,10 @@ public class MapFragment extends Fragment implements View.OnClickListener{
 //                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
 //            }
             String path = sharedData.storage + filename + ".png";
-            File temp = new File(sharedData.storage + filename + ".png");
-//            do {
-//
-//            } while (!temp.exists());
+            final File temp = new File(sharedData.storage + filename + ".png");
+
             //log 4 test
             Log.e(TAG, "onDraw: DECODE FILE PATH" + path);
-
             map = BitmapFactory.decodeFile(path);
             scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
@@ -493,23 +501,8 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                     }
                     br.close();
                     String json = responseOutput.toString();
-                    try {
-                        JSONArray list = new JSONArray(json);
-                        int total = list.length();
-                        rooms = new Room[total];
-                        for (int i = 0; i < total; i++) {
-                            JSONObject jsonObject = new JSONObject(list.get(i).toString());
-                            Room newRoom = new Room(jsonObject.getInt("Id"), jsonObject.getString("Name"),
-                                    jsonObject.getInt("Floor"), jsonObject.getDouble("Length"),
-                                    jsonObject.getDouble("Width"), jsonObject.getInt("MapId"),
-                                    jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"),
-                                    jsonObject.getInt("PosAX"), jsonObject.getInt("PosAY"),
-                                    jsonObject.getInt("PosBX"), jsonObject.getInt("PosBY"));
-                            rooms[i] = newRoom;
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+                    editor.putString("ROOMLIST",json).apply();
+                    convertToRoomArray(json);
                 }
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
@@ -542,21 +535,8 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                     }
                     br.close();
                     String json = responseOutput.toString();
-                    try {
-                        JSONArray list = new JSONArray(json);
-                        int total = list.length();
-                        corners = new Corner[total];
-                        for (int i = 0; i < total; i++) {
-                            JSONObject jsonObject = new JSONObject(list.get(i).toString());
-                            Corner newCorner = new Corner(jsonObject.getInt("MapId"), jsonObject.getString("Description"),
-                                    jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"),
-                                    jsonObject.getInt("Id"), jsonObject.getInt("Floor"), jsonObject.getInt("Position"));
-                            corners[i] = newCorner;
-                        }
-                    } catch (JSONException e) {
-                        Log.e(TAG, "doInBackground: CORNER", e);
-                        e.printStackTrace();
-                    }
+                    editor.putString("CORNERLIST",json).apply();
+                    convertToCornerArray(json);
                 }
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
@@ -659,11 +639,11 @@ public class MapFragment extends Fragment implements View.OnClickListener{
 
                 }
             } catch (MalformedURLException e) {
-                Log.e(TAG, "doInBackground: GetListMap" + e);
+                Log.e(TAG, "doInBackground: GetListMap", e);
             } catch (IOException e) {
-                Log.e(TAG, "doInBackground: GetListMap" + e);
+                Log.e(TAG, "doInBackground: GetListMap", e);
             } catch (JSONException e) {
-                Log.e(TAG, "doInBackground: GetListMap" + e);
+                Log.e(TAG, "doInBackground: GetListMap", e);
             }
             result = "Finish";
             return null;
@@ -671,6 +651,11 @@ public class MapFragment extends Fragment implements View.OnClickListener{
 
         @Override
         protected void onPostExecute(String s) {
+            FrameLayout layout = v.findViewById(R.id.canvasView);
+            canvasMapView = new CanvasMapView(getContext());
+            canvasMapView.setId(R.id.viewCanvas);
+            layout.addView(canvasMapView);
+            stopTask = false;
         }
     }
 
@@ -685,11 +670,48 @@ public class MapFragment extends Fragment implements View.OnClickListener{
     }
 
     public void DownloadMap(String urlMap, String nameMap) {
-        downloadManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
         Uri uri = Uri.parse(urlMap);
         DownloadManager.Request request = new DownloadManager.Request(uri);
         request.setDestinationInExternalPublicDir("/LOAB", nameMap + ".png");
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         Long reference = downloadManager.enqueue(request);
+    }
+
+    public void convertToRoomArray(String json){
+        try {
+            JSONArray list = new JSONArray(json);
+            int total = list.length();
+            rooms = new Room[total];
+            for (int i = 0; i < total; i++) {
+                JSONObject jsonObject = new JSONObject(list.get(i).toString());
+                Room newRoom = new Room(jsonObject.getInt("Id"), jsonObject.getString("Name"),
+                        jsonObject.getInt("Floor"), jsonObject.getDouble("Length"),
+                        jsonObject.getDouble("Width"), jsonObject.getInt("MapId"),
+                        jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"),
+                        jsonObject.getInt("PosAX"), jsonObject.getInt("PosAY"),
+                        jsonObject.getInt("PosBX"), jsonObject.getInt("PosBY"));
+                rooms[i] = newRoom;
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void convertToCornerArray(String json){
+        try {
+            JSONArray list = new JSONArray(json);
+            int total = list.length();
+            corners = new Corner[total];
+            for (int i = 0; i < total; i++) {
+                JSONObject jsonObject = new JSONObject(list.get(i).toString());
+                Corner newCorner = new Corner(jsonObject.getInt("MapId"), jsonObject.getString("Description"),
+                        jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"),
+                        jsonObject.getInt("Id"), jsonObject.getInt("Floor"), jsonObject.getInt("Position"));
+                corners[i] = newCorner;
+            }
+        } catch (JSONException e) {
+            Log.e(TAG, "doInBackground: CORNER", e);
+            e.printStackTrace();
+        }
     }
 }

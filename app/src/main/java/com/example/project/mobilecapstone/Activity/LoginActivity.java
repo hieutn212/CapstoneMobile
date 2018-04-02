@@ -164,9 +164,11 @@ public class LoginActivity extends AppCompatActivity {
     }*/
 
     public class CheckLogin extends AsyncTask<String, Void, String> {
-
+        int responseCode ;
+        StringBuilder responseOutput;
         @Override
         protected void onPreExecute() {
+
             username = txtUsername.getText().toString();
             password = txtPassword.getText().toString();
         }
@@ -178,13 +180,13 @@ public class LoginActivity extends AppCompatActivity {
                 Log.e(TAG, "doInBackground: Login url" +sharedData.IP );
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
-                int responseCode = connection.getResponseCode();
+                responseCode = connection.getResponseCode();
                 final StringBuilder output = new StringBuilder("Request URL " + url);
                 output.append(System.getProperty("line.separator") + "Response Code " + responseCode);
                 output.append(System.getProperty("line.separator") + "Type " + "GET");
                 BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String line = "";
-                final StringBuilder responseOutput = new StringBuilder();
+                responseOutput = new StringBuilder();
                 while ((line = br.readLine()) != null) {
                     responseOutput.append(line);
                 }
@@ -192,32 +194,10 @@ public class LoginActivity extends AppCompatActivity {
                 Log.e(TAG, "doInBackground: CheckLogin" + responseOutput.toString());
                 br.close();
                 output.append(System.getProperty("line.separator") + "Response " + System.getProperty("line.separator") + System.getProperty("line.separator") + responseOutput.toString());
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(LoginActivity.this, "Xin chào!", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
-                    intent.putExtra("Username", username);
-                    intent.putExtra("Fullname", new JSONObject(responseOutput.toString()).getString("Fullname").toString());
-                    intent.putExtra("Id", new JSONObject(responseOutput.toString()).getString("Id").toString());
-                    startActivity(intent);
-                }
-                if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(LoginActivity.this, "Không hợp lệ!", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
+
             } catch (MalformedURLException e) {
                 Log.e(TAG, "doInBackground: CheckLogin" + e);
             } catch (IOException e) {
-                Log.e(TAG, "doInBackground: CheckLogin" + e);
-            } catch (JSONException e) {
                 Log.e(TAG, "doInBackground: CheckLogin" + e);
             }
             return null;
@@ -225,6 +205,20 @@ public class LoginActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String s) {
+            try {
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    Toast.makeText(LoginActivity.this, "Xin chào!", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                    intent.putExtra("Username", username);
+                    intent.putExtra("Fullname", new JSONObject(responseOutput.toString()).getString("Fullname"));
+                    intent.putExtra("Id", new JSONObject(responseOutput.toString()).getString("Id").toString());
+                    startActivity(intent);
+                }else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                    Toast.makeText(LoginActivity.this, "Tên hoặc mật khẩu không đúng", Toast.LENGTH_SHORT).show();
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
