@@ -48,13 +48,19 @@ public class Utils {
         // Area = .5*Base*H                                          *Solve for height
         // Height = Area/.5/Base
 
-        double area = Math.abs(.5 * (pointA.getLatitude() * pointB.getLongitude() + pointB.getLatitude() * longitude +
-                latitude * pointA.getLongitude() - pointB.getLatitude() * pointA.getLongitude() - latitude * pointB.getLongitude()
-                - pointA.getLatitude() * longitude));
-        double bottom = Math.sqrt(Math.pow(pointA.getLatitude() - pointB.getLatitude(), 2) +
-                Math.pow(pointA.getLongitude() - pointB.getLongitude(), 2));
+//        double area = Math.abs(.5 * (pointA.getLatitude() * pointB.getLongitude() + pointB.getLatitude() * longitude +
+//                latitude * pointA.getLongitude() - pointB.getLatitude() * pointA.getLongitude() - latitude * pointB.getLongitude()
+//                - pointA.getLatitude() * longitude));
+//        double bottom = Math.sqrt(Math.pow(pointA.getLatitude() - pointB.getLatitude(), 2) + Math.pow(pointA.getLongitude() - pointB.getLongitude(), 2));
+//        double height = area / bottom * 2;
+        double bottom = HaversineInKMFast(pointA.getLatitude(), pointA.getLongitude(), pointB.getLatitude(), pointB.getLongitude());
+        double a = HaversineInKMFast(pointA.getLatitude(), pointA.getLongitude(), latitude, longitude);
+        double b = HaversineInKMFast(latitude, longitude, pointB.getLatitude(), pointB.getLongitude());
+        double p = .5 * (bottom + a + b);
+        double area = Math.sqrt(p * (p - bottom) * (p - a) * (p - b));
+//        double bottom = Math.sqrt(Math.pow(pointA.getLatitude() - pointB.getLatitude(), 2) + Math.pow(pointA.getLongitude() - pointB.getLongitude(), 2));
         double height = area / bottom * 2;
-        return height;
+        return height * 1000D;
     }
 
     public static double getPixelWithPer(double perpendicular, double currentDistance) {

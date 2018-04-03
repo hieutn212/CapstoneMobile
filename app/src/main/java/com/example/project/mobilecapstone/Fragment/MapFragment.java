@@ -57,7 +57,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     static double latitude;
     static double longitude;
     static double altitude;
-
+    int mapId = 0;
     static float posX = 0;
     static float posY = 0;
     static double deviceLat = 0;
@@ -234,8 +234,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
 //                altitude = 15.0;
-//                latitude = 10.8529728;
-//                longitude = 106.6295536;
+                latitude = 10.85296;
+                longitude = 106.629554;
             } else {
                 gps.showSettingAlert();
             }
@@ -253,9 +253,11 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                         altitudeMap2 = new JSONObject(listMap.get(i + 1)).getDouble("Altitude");
                         if (altitude == 0.0) {
                             filename = "floor1";
+                            mapId = 1;
                             break;
                         } else if (altitudeMap1 <= altitude && altitude < altitudeMap2) {
                             filename = nameMap;
+                            mapId = new JSONObject(listMap.get(i)).getInt("Id");
                             currentFloor = filename.substring(filename.length() - 1);
                             if (currentFloor.equals(sharedPreference.getString("LASTFLOOR", ""))) {
                                 String roomJson = sharedPreference.getString("ROOMLIST", null);
@@ -263,8 +265,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                                 convertToCornerArray(cornerJson);
                                 convertToRoomArray(roomJson);
                             } else {
-                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
                                 editor.putString("LASTFLOOR", currentFloor).apply();
                             }
                             break;
@@ -272,6 +274,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                     } else {
                         if (altitudeMap1 <= altitude) {
                             filename = nameMap;
+                            mapId = new JSONObject(listMap.get(i)).getInt("Id");
                             currentFloor = filename.substring(filename.length() - 1);
                             if (currentFloor.equals(sharedPreference.getString("LASTFLOOR", ""))) {
                                 String roomJson = sharedPreference.getString("ROOMLIST", null);
@@ -279,8 +282,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                                 convertToCornerArray(cornerJson);
                                 convertToRoomArray(roomJson);
                             } else {
-                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
                                 editor.putString("LASTFLOOR", currentFloor).apply();
                             }
                             break;
@@ -293,8 +296,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             }
             if (first) {
                 first = false;
-                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
             }
             String path = sharedData.storage + filename + ".png";
             final File temp = new File(sharedData.storage + filename + ".png");
@@ -338,7 +341,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             }
 
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +
-                            latitude + "\nLong: " + longitude + "\nAltitude: " + altitude,
+                            latitude + "\nLong: " + longitude + "\nAltitude: " + altitude
+                            + "\nX: " + posX + "\nY: " + posY + "\nfloor" + mapId,
                     Toast.LENGTH_LONG).show();
         }
 
@@ -355,26 +359,25 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         int corner = 1;
         double min = Utils.PerpendicularDistance(corners[0], corners[1], longitude, latitude);
         double perpendicular = Utils.PerpendicularDistance(corners[1], corners[2], longitude, latitude);
-        if (min > perpendicular) {
+        if (perpendicular <= min) {
             min = perpendicular;
             corner = 2;
         }
         perpendicular = Utils.PerpendicularDistance(corners[2], corners[3], longitude, latitude);
-        if (perpendicular < min) {
+        if (perpendicular <= min) {
             min = perpendicular;
             corner = 3;
         }
         perpendicular = Utils.PerpendicularDistance(corners[3], corners[0], longitude, latitude);
-        if (perpendicular < min) {
+        if (perpendicular <= min) {
             min = perpendicular;
             corner = 4;
         }
-
-        Corner currentCorner1 = corners[1];
-        Corner currentCorner2 = corners[0];
         if (isDevice) {
             if (corner == 1) {
                 //29  18
+                Corner currentCorner1 = corners[1];
+                Corner currentCorner2 = corners[0];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -387,8 +390,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 devicePosX = (float) (width / distanceCorner * x);
 //                posX = width / 18 * ((float) (rooms[0].getWidth()));
             } else if (corner == 3) {
-                currentCorner1 = corners[2];
-                currentCorner2 = corners[3];
+                Corner currentCorner1 = corners[2];
+                Corner currentCorner2 = corners[3];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -400,8 +403,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 double x = distanceCorner - (min + 3);
                 devicePosX = (float) (width / distanceCorner * x);
             } else if (corner == 2) {
-                currentCorner1 = corners[2];
-                currentCorner2 = corners[1];
+                Corner currentCorner1 = corners[2];
+                Corner currentCorner2 = corners[1];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -412,8 +415,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
                 devicePosX = (float) (width / distanceCorner * min);
             } else if (corner == 4) {
-                currentCorner1 = corners[3];
-                currentCorner2 = corners[0];
+                Corner currentCorner1 = corners[3];
+                Corner currentCorner2 = corners[0];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -425,8 +428,11 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 devicePosX = (float) (width / distanceCorner * min);
             }
         } else {
+            Log.d("Corner:", corner + "");
             if (corner == 1) {
                 //29  18
+                Corner currentCorner1 = corners[1];
+                Corner currentCorner2 = corners[0];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -435,12 +441,12 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 currentCorner2 = corners[2];
                 distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
-                double x = min + 3;
+                double x = min;
                 posX = (float) (width / distanceCorner * x);
 //                posX = width / 18 * ((float) (rooms[0].getWidth()));
             } else if (corner == 3) {
-                currentCorner1 = corners[2];
-                currentCorner2 = corners[3];
+                Corner currentCorner1 = corners[2];
+                Corner currentCorner2 = corners[3];
                 double distance2 = (float) Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -452,8 +458,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 double x = distanceCorner - (min + 3);
                 posX = (float) (width / distanceCorner * x);
             } else if (corner == 2) {
-                currentCorner1 = corners[2];
-                currentCorner2 = corners[1];
+                Corner currentCorner1 = corners[2];
+                Corner currentCorner2 = corners[1];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -464,8 +470,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
                 posX = (float) (width / distanceCorner * min);
             } else if (corner == 4) {
-                currentCorner1 = corners[3];
-                currentCorner2 = corners[0];
+                Corner currentCorner1 = corners[3];
+                Corner currentCorner2 = corners[0];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -495,9 +501,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         @Override
         protected Object doInBackground(Object[] objects) {
             try {
-                int mapId = Integer.parseInt(objects[0].toString());
-                int floor = Integer.parseInt(objects[1].toString());
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/GetListRoom?floor=" + floor + "&mapId=" + mapId);
+                int buildingId = Integer.parseInt(objects[0].toString());
+                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/GetListRoom?buildingId=" + buildingId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
