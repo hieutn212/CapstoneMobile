@@ -101,7 +101,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        new CreatePosition(this).execute();
+        new CreatePosition(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         Intent intent = new Intent(this, PositionService.class);
         startService(intent);
     }
