@@ -1,10 +1,14 @@
 package com.example.project.mobilecapstone.Fragment;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +22,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.project.mobilecapstone.Activity.HomeActivity;
 import com.example.project.mobilecapstone.Data.UserInfo;
 import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.R;
@@ -43,6 +48,7 @@ import static android.content.ContentValues.TAG;
 
 public class TrackingFragment extends Fragment {
 
+    SwipeRefreshLayout swipeRefreshLayout;
     Button btn_createDevice;
     ArrayList<String> arr = new ArrayList<String>();
     private String IMEI = "";
@@ -64,6 +70,23 @@ public class TrackingFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        swipeRefreshLayout = getView().findViewById(R.id.swipeLayout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @SuppressLint("ResourceAsColor")
+            @Override
+            public void onRefresh() {
+                final FragmentManager mng = getActivity().getSupportFragmentManager();
+                swipeRefreshLayout.setColorSchemeResources(R.color.Refresh1,R.color.Refresh2,R.color.Refresh3,R.color.Refresh4);
+                swipeRefreshLayout.setRefreshing(true);
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        swipeRefreshLayout.setRefreshing(false);
+                        mng.beginTransaction().replace(R.id.content_main,new TrackingFragment()).commit();
+                    }
+                },1000);
+            }
+        });
         new GetListDevice().execute();
         listview = getView().findViewById(R.id.device_list);
         adapter = new TrackerListAdapter();
@@ -116,6 +139,12 @@ public class TrackingFragment extends Fragment {
                 dialog.getWindow().setAttributes(params);
             }
         });
+    }
+    //change actionbar Title
+    @Override
+    public void onResume() {
+        super.onResume();
+        ((HomeActivity) getActivity()).setActionBarTitle(getString(R.string.ACTION_BAR_TITLE_DEVICES));
     }
 
     class TrackerListAdapter extends BaseAdapter implements ListAdapter {

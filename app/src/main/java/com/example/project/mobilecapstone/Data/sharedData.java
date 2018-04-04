@@ -9,9 +9,10 @@ import android.os.Environment;
 public class sharedData {
     //IP of server
 
-    public static String IP = "192.168.1.6";
+    public static String IP = "169.254.34.32";
     public static String storage = Environment.getExternalStorageDirectory().getAbsolutePath() + "/LOAB/";
     //tracking location
     public static Double LAT = 0.0;
     public static Double LONG = 0.0;
+    public static Double ALT = 0.0;
 }

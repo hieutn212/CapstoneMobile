@@ -61,10 +61,9 @@ public class TrackingService extends IntentService {
                 String device = responseOutput.toString();
                 sharedData.LAT = new JSONObject(device).getDouble("Latitude");
                 sharedData.LONG = new JSONObject(device).getDouble("Longitude");
-                sharedData.LAT = 10.8529456;
-                sharedData.LONG = 106.6295166;
+                sharedData.ALT = new JSONObject(device).getDouble("Altitude");
                 Log.e(TAG, "onHandleIntent: TrackingService-Location"+ device);
-                Log.e(TAG, "onHandleIntent: TrackingService-sharedData"+ sharedData.LAT+"---"+sharedData.LONG);
+                Log.e(TAG, "onHandleIntent: TrackingService-sharedData"+ sharedData.LAT+"---"+sharedData.LONG+"---"+sharedData.ALT);
             } catch (MalformedURLException e) {
                 Log.e(TAG, "onHandleIntent: TrackingService --- ",e );
             } catch (IOException e) {

@@ -13,9 +13,12 @@ import android.graphics.Paint;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,6 +28,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.example.project.mobilecapstone.Activity.HomeActivity;
 import com.example.project.mobilecapstone.Data.Corner;
 import com.example.project.mobilecapstone.Data.Room;
 import com.example.project.mobilecapstone.Data.sharedData;
@@ -50,7 +54,6 @@ import javax.net.ssl.HttpsURLConnection;
 
 
 public class MapFragment extends Fragment implements View.OnClickListener{
-
     public boolean stopTask = false;
     GPSRouter gps;
     static double latitude;
@@ -72,6 +75,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
     ArrayList<String> listMap = new ArrayList<String>();
     Integer buildingId;
     private DownloadManager downloadManager;
+    public SwipeRefreshLayout swipeRefreshLayout;
     static int width = 0;
     static int height = 0;
     private static final String TAG = "MapFragment";
@@ -127,6 +131,12 @@ public class MapFragment extends Fragment implements View.OnClickListener{
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        ((HomeActivity) getActivity()).setActionBarTitle(getString(R.string.ACTION_BAR_TITLE_MAPS));
+    }
+
+    @Override
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.buttonSearch:
@@ -160,6 +170,23 @@ public class MapFragment extends Fragment implements View.OnClickListener{
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        swipeRefreshLayout = getView().findViewById(R.id.swipeLayout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @SuppressLint("ResourceAsColor")
+            @Override
+            public void onRefresh() {
+                final FragmentManager mng = getActivity().getSupportFragmentManager();
+                swipeRefreshLayout.setColorSchemeResources(R.color.Refresh1,R.color.Refresh2,R.color.Refresh3,R.color.Refresh4);
+                swipeRefreshLayout.setRefreshing(true);
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        swipeRefreshLayout.setRefreshing(false);
+                        mng.beginTransaction().replace(R.id.content_main,new MapFragment()).commit();
+                    }
+                },1000);
+            }
+        });
     }
 
 //    @Override

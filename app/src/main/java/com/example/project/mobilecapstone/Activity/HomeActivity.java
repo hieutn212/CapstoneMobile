@@ -29,7 +29,7 @@ import com.example.project.mobilecapstone.R;
 
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-
+    private static final int REQUEST_CODE_ROOM = 0x9345;
     FragmentManager fm = getSupportFragmentManager();
     UserInfo userInfo = new UserInfo();
     private static final String TAG = "HomeActivity";
@@ -242,6 +242,9 @@ public class HomeActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        if (id == R.id.nav_search) {
+
+        }
         if (id == R.id.nav_map) {
             fm.beginTransaction().replace(R.id.content_main, new MapFragment()).commit();
         } else if (id == R.id.nav_trackers) {
@@ -256,11 +259,16 @@ public class HomeActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-
+    //Save logged in user info
     public void getUserInfo() {
         userInfo.setId(getIntent().getStringExtra("Id"));
         userInfo.setUserName(getIntent().getStringExtra("Username"));
         userInfo.setFullName(getIntent().getStringExtra("Fullname"));
         Log.e(TAG, "getUserInfo: " + userInfo.getId() + userInfo.getFullName() + userInfo.getUserName());
+    }
+
+    //set Actionbar title
+    public void setActionBarTitle(String title){
+        getSupportActionBar().setTitle(title);
     }
 }

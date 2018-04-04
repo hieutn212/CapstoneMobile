@@ -7,6 +7,8 @@
     <string name="title_activity_home">HomeActivity</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="ACTION_BAR_TITLE_MAPS">Bản Đồ</string>
+    <string name="ACTION_BAR_TITLE_DEVICES">Thiết Bị</string>
     <!-- context menu labels in vietnamese-->
     <string name="action_settings">Cài đặt</string>
     <string name="action_logout">Đăng xuất</string>
@@ -27,4 +29,5 @@
     <string name="login_register_link">Đăng ký tài khoản mới tại đây</string>
     <!-- map screen labels in vietnamese-->
     <string name="map_btn_search">Hãy chọn điểm đến</string>
+
 </resources>
