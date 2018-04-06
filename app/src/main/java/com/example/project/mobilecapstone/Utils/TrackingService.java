@@ -44,7 +44,7 @@ public class TrackingService extends IntentService {
         while (true) {
             try {
                 //get position data from server
-                Thread.sleep(10000);
+                Thread.sleep(5000);
                 URL url = new URL("http://"+ sharedData.IP +":57305/api/Position/trackingProduct?deviceId=" + deviceId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");

@@ -1,22 +1,23 @@
 package com.example.project.mobilecapstone;
 
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.support.v7.widget.Toolbar;
 
-import com.example.project.mobilecapstone.Data.RoomModel;
 import com.example.project.mobilecapstone.Data.sharedData;
-import com.example.project.mobilecapstone.Utils.Utils;
+import com.example.project.mobilecapstone.Fragment.MapTrackingFragment;
+import com.google.android.gms.maps.MapFragment;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import org.json.JSONException;
@@ -133,6 +134,7 @@ public class MapSearchActivity extends AppCompatActivity {
         return true;
     }
 public class getRoom extends AsyncTask<String, Void, Void> {
+    Intent intent;
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
@@ -157,13 +159,12 @@ public class getRoom extends AsyncTask<String, Void, Void> {
                 String json = responseOutput.toString();
                 try {
                     JSONObject obj = new JSONObject(json);
-                    Intent intent = new Intent();
+                    intent = new Intent(MapSearchActivity.this, MapTrackingFragment.class);
                     intent.putExtra("PosAX", obj.getInt("PosAX"));
                     intent.putExtra("PosAY", obj.getInt("PosAY"));
                     intent.putExtra("PosBX", obj.getInt("PosBX"));
                     intent.putExtra("PosBY", obj.getInt("PosBY"));
-                    setResult(1, intent);
-                    MapSearchActivity.this.finish();
+                    startActivity(intent);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -176,6 +177,14 @@ public class getRoom extends AsyncTask<String, Void, Void> {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    protected void onPostExecute(Void aVoid) {
+        FragmentManager mng = getFragmentManager();
+        FragmentTransaction transaction = mng.beginTransaction();
+        transaction.replace(R.id.content_main,new MapFragment());
+        transaction.commit();
     }
 }
 }
