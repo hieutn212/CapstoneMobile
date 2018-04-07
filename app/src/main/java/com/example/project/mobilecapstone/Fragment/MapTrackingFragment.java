@@ -3,6 +3,7 @@ package com.example.project.mobilecapstone.Fragment;
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -31,6 +32,7 @@ import com.example.project.mobilecapstone.Activity.HomeActivity;
 import com.example.project.mobilecapstone.Data.Corner;
 import com.example.project.mobilecapstone.Data.Room;
 import com.example.project.mobilecapstone.Data.sharedData;
+import com.example.project.mobilecapstone.MapSearchActivity;
 import com.example.project.mobilecapstone.R;
 import com.example.project.mobilecapstone.Utils.GPSRouter;
 import com.example.project.mobilecapstone.Utils.Utils;
@@ -120,6 +122,14 @@ public class MapTrackingFragment extends Fragment {
         fragment = this;
         // Inflate the layout for this fragment
         v = inflater.inflate(R.layout.fragment_map, container, false);
+        btnSearch = v.findViewById(R.id.buttonSearch);
+        btnSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getActivity(), MapSearchActivity.class);
+                startActivityForResult(i, REQUEST_CODE_ROOM);
+            }
+        });
         //assign text view
 //        accelLast = SM.GRAVITY_EARTH;
 //        accelCurrent = SM.GRAVITY_EARTH;
@@ -130,6 +140,35 @@ public class MapTrackingFragment extends Fragment {
     public void onResume() {
         super.onResume();
         ((HomeActivity) getActivity()).setActionBarTitle(getString(R.string.ACTION_BAR_TITLE_MAPS));
+    }
+
+   /* @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.buttonSearch:
+
+                break;
+        }
+
+    }*/
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==REQUEST_CODE_ROOM)
+        {
+            if(resultCode == 1){
+                //Draw a room point
+                data.getIntExtra("PosAX",0);
+                roomPosX = Utils.getPixel(width / 12, data.getIntExtra("PosAX", 0)  , data.getIntExtra("PosBX",0));
+                roomPosY = Utils.getPixel(width / 12, data.getIntExtra("PosAY", 0) , data.getIntExtra("PosBY",0) );
+
+            }
+            if (resultCode == 0) {
+                //Write your code if there's no result
+            }
+        }
     }
 
     @Override
