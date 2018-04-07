@@ -53,7 +53,7 @@ import java.util.ArrayList;
 import javax.net.ssl.HttpsURLConnection;
 
 
-public class MapFragment extends Fragment implements View.OnClickListener{
+public class MapTrackingFragment extends Fragment {
     public boolean stopTask = false;
     GPSRouter gps;
     static double latitude;
@@ -78,7 +78,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
     public SwipeRefreshLayout swipeRefreshLayout;
     static int width = 0;
     static int height = 0;
-    private static final String TAG = "MapFragment";
+    private static final String TAG = "MapTrackingFragment";
     CanvasMapView canvasMapView;
     View v;
     Button btnSearch;
@@ -91,7 +91,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
 //    private float accelLast, accelCurrent, accel, x, y, z;
 //    private float[] values;
 
-    public MapFragment() {
+    public MapTrackingFragment() {
 
     }
 
@@ -114,7 +114,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
         /*do {
 
         } while (!result.equals("Finish"));*/
-        new CanvasAsyncTask(MapFragment.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        new CanvasAsyncTask(MapTrackingFragment.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 //        new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
 //        new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
         this.getArguments();
@@ -122,9 +122,15 @@ public class MapFragment extends Fragment implements View.OnClickListener{
         fragment = this;
         // Inflate the layout for this fragment
         v = inflater.inflate(R.layout.fragment_map, container, false);
-        //assign text view
         btnSearch = v.findViewById(R.id.buttonSearch);
-        btnSearch.setOnClickListener(this);
+        btnSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getActivity(), MapSearchActivity.class);
+                startActivityForResult(i, REQUEST_CODE_ROOM);
+            }
+        });
+        //assign text view
 //        accelLast = SM.GRAVITY_EARTH;
 //        accelCurrent = SM.GRAVITY_EARTH;
         return v;
@@ -136,16 +142,15 @@ public class MapFragment extends Fragment implements View.OnClickListener{
         ((HomeActivity) getActivity()).setActionBarTitle(getString(R.string.ACTION_BAR_TITLE_MAPS));
     }
 
-    @Override
+   /* @Override
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.buttonSearch:
-                Intent i = new Intent(getActivity(), MapSearchActivity.class);
-                startActivityForResult(i, REQUEST_CODE_ROOM);
+
                 break;
         }
 
-    }
+    }*/
 
 
     @Override
@@ -182,7 +187,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                     @Override
                     public void run() {
                         swipeRefreshLayout.setRefreshing(false);
-                        mng.beginTransaction().replace(R.id.content_main,new MapFragment()).commit();
+                        mng.beginTransaction().replace(R.id.content_main,new MapTrackingFragment()).commit();
                     }
                 },1000);
             }
@@ -252,17 +257,18 @@ public class MapFragment extends Fragment implements View.OnClickListener{
 
             //get location from GPSRouter class
             Context context = this.getContext();
-            gps = new GPSRouter(context);
-            if (gps.canGetLocation()) {
-                latitude = gps.getLatitude();
-                longitude = gps.getLongitude();
-//                altitude = gps.getAltitude();
-                altitude = 15.0;
-//            latitude = 10.8529728;
-//            longitude = 106.6295536;
-            } else {
-                gps.showSettingAlert();
-            }
+//            gps = new GPSRouter(context);
+//            Bundle bundle = fragment.getArguments();
+//            if (bundle == null) {
+                latitude = sharedData.LAT;
+                longitude = sharedData.LONG;
+                altitude = sharedData.ALT;
+//          } else {
+//                latitude = bundle.getDouble("LAT");
+//                longitude = bundle.getDouble("LONG");
+//                altitude = bundle.getDouble("ALT");
+//            }
+
             String filename = "floor1";
             Bitmap map ;
             Bitmap scaleMap;
@@ -329,15 +335,14 @@ public class MapFragment extends Fragment implements View.OnClickListener{
             canvas.drawBitmap(scaleMap, 0, 0, null);
             if (first == false) {
 
-                Bundle bundle = fragment.getArguments();
-                if (bundle != null) {
-                    deviceLat = bundle.getDouble("LAT");
-                    deviceLong = bundle.getDouble("LONG");
-                }
+//                if (bundle != null) {
+//                    deviceLat = bundle.getDouble("LAT");
+//                    deviceLong = bundle.getDouble("LONG");
+//                }
                 getPointMap(latitude, longitude, false);
-                if (deviceLat != 0 || deviceLong != 0) {
-                    getPointMap(deviceLat, deviceLong, true);
-                }
+//                if (deviceLat != 0 || deviceLong != 0) {
+//                    getPointMap(deviceLat, deviceLong, true);
+//                }
                 if (posX != 0 || posY != 0) {
                     mPaint.setColor(Color.BLUE);
                     canvas.drawCircle(posX, posY, 10, mPaint);
@@ -580,9 +585,9 @@ public class MapFragment extends Fragment implements View.OnClickListener{
 
     public class CanvasAsyncTask extends AsyncTask<Void, Double, Void> {
 
-        private MapFragment fragment;
+        private MapTrackingFragment fragment;
 
-        public CanvasAsyncTask(MapFragment fragment) {
+        public CanvasAsyncTask(MapTrackingFragment fragment) {
             this.fragment = fragment;
         }
 //        private Activity activity;

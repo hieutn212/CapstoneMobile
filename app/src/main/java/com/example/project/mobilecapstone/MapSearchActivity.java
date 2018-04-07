@@ -3,20 +3,17 @@ package com.example.project.mobilecapstone;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.support.v7.widget.Toolbar;
 
-import com.example.project.mobilecapstone.Data.RoomModel;
 import com.example.project.mobilecapstone.Data.sharedData;
-import com.example.project.mobilecapstone.Utils.Utils;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import org.json.JSONException;
@@ -132,50 +129,50 @@ public class MapSearchActivity extends AppCompatActivity {
         searchView.setMenuItem(item);
         return true;
     }
-public class getRoom extends AsyncTask<String, Void, Void> {
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-    }
-
-    @Override
-    protected Void doInBackground(String... strings) {
-        try {
-            URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/searchRoom?name=" + roomName + "&buildingId=" + buildingId);
-
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpsURLConnection.HTTP_OK) {
-                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                StringBuilder responseOutput = new StringBuilder();
-                String line = "";
-                while ((line = br.readLine()) != null) {
-                    responseOutput.append(line);
-                }
-                br.close();
-                String json = responseOutput.toString();
-                try {
-                    JSONObject obj = new JSONObject(json);
-                    Intent intent = new Intent();
-                    intent.putExtra("PosAX", obj.getInt("PosAX"));
-                    intent.putExtra("PosAY", obj.getInt("PosAY"));
-                    intent.putExtra("PosBX", obj.getInt("PosBX"));
-                    intent.putExtra("PosBY", obj.getInt("PosBY"));
-                    setResult(1, intent);
-                    MapSearchActivity.this.finish();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (MalformedURLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+    public class getRoom extends AsyncTask<String, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
         }
-        return null;
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            try {
+                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/searchRoom?name=" + roomName + "&buildingId=" + buildingId);
+
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    StringBuilder responseOutput = new StringBuilder();
+                    String line = "";
+                    while ((line = br.readLine()) != null) {
+                        responseOutput.append(line);
+                    }
+                    br.close();
+                    String json = responseOutput.toString();
+                    try {
+                        JSONObject obj = new JSONObject(json);
+                        Intent intent = new Intent();
+                        intent.putExtra("PosAX", obj.getInt("PosAX"));
+                        intent.putExtra("PosAY", obj.getInt("PosAY"));
+                        intent.putExtra("PosBX", obj.getInt("PosBX"));
+                        intent.putExtra("PosBY", obj.getInt("PosBY"));
+                        setResult(1, intent);
+                        MapSearchActivity.this.finish();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (MalformedURLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return null;
+        }
     }
-}
 }

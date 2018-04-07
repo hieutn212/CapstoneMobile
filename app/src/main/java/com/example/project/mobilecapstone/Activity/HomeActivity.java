@@ -2,12 +2,15 @@ package com.example.project.mobilecapstone.Activity;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -27,12 +30,15 @@ import com.example.project.mobilecapstone.Fragment.MapFragment;
 import com.example.project.mobilecapstone.Fragment.TrackingFragment;
 import com.example.project.mobilecapstone.R;
 
+import java.util.List;
+
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-
+    private static final int REQUEST_CODE_ROOM = 0x9345;
     FragmentManager fm = getSupportFragmentManager();
     UserInfo userInfo = new UserInfo();
     private static final String TAG = "HomeActivity";
+    List<Fragment> fragmentList ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -210,7 +216,26 @@ public class HomeActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            new AlertDialog.Builder(this).setTitle("Thoát ứng dụng").setMessage("Bạn có muốn thoát ứng dụng ?").setPositiveButton("Thoát", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    fragmentList= fm.getFragments();
+                    Fragment temp = fragmentList.get(fragmentList.size()-1);
+                    if (temp.getClass().toString() == MapFragment.class.toString()){
+                        MapFragment fragment = (MapFragment) temp;
+                        fragment.stopTask = true;
+                    }
+                    Intent intent = new Intent(Intent.ACTION_MAIN);
+                    intent.addCategory(Intent.CATEGORY_HOME);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                }
+            }).setNegativeButton("Không", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                }
+            }).show();
         }
     }
 
@@ -242,13 +267,48 @@ public class HomeActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        /*if (id == R.id.nav_search) {
+            Intent intent = new Intent(HomeActivity.this, MapSearchActivity.class);
+            startActivityForResult(intent,REQUEST_CODE_ROOM);
+        }*/
         if (id == R.id.nav_map) {
-            fm.beginTransaction().replace(R.id.content_main, new MapFragment()).commit();
+            FragmentTransaction transaction = fm.beginTransaction();
+            transaction.replace(R.id.content_main, new MapFragment());
+            transaction.addToBackStack(null);
+            transaction.commit();
         } else if (id == R.id.nav_trackers) {
-            MapFragment fragment = (MapFragment)fm.getFragments().get(0);
-            fragment.stopTask = true;
-            fm.beginTransaction().replace(R.id.content_main, new TrackingFragment()).commit();
+            fragmentList= fm.getFragments();
+            Fragment temp = fragmentList.get(fragmentList.size()-1);
+            if (temp.getClass().toString() == MapFragment.class.toString()){
+                MapFragment fragment = (MapFragment) temp;
+                fragment.stopTask = true;
+            }
+            FragmentTransaction transaction = fm.beginTransaction();
+            transaction.replace(R.id.content_main, new TrackingFragment());
+            transaction.addToBackStack(null);
+            transaction.commit();
         } else if (id == R.id.nav_settings) {
+
+        } else if (id == R.id.nav_logout) {
+            new AlertDialog.Builder(this).setTitle("Đăng xuất ?").setMessage("Bạn có muốn đăng xuất ?").setPositiveButton("Có", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    fragmentList= fm.getFragments();
+                    Fragment temp = fragmentList.get(fragmentList.size()-1);
+                    if (temp.getClass().toString() == MapFragment.class.toString()){
+                        MapFragment fragment = (MapFragment) temp;
+                        fragment.stopTask = true;
+                    }
+                    Intent intent = new Intent(HomeActivity.this,LoginActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+            }).setNegativeButton("Không", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                }
+            }).show();
 
         }
 
@@ -256,11 +316,16 @@ public class HomeActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-
+    //Save logged in user info
     public void getUserInfo() {
         userInfo.setId(getIntent().getStringExtra("Id"));
         userInfo.setUserName(getIntent().getStringExtra("Username"));
         userInfo.setFullName(getIntent().getStringExtra("Fullname"));
         Log.e(TAG, "getUserInfo: " + userInfo.getId() + userInfo.getFullName() + userInfo.getUserName());
+    }
+
+    //set Actionbar title
+    public void setActionBarTitle(String title){
+        getSupportActionBar().setTitle(title);
     }
 }

@@ -213,6 +213,8 @@ public class LoginActivity extends AppCompatActivity {
                     intent.putExtra("Fullname", new JSONObject(responseOutput.toString()).getString("Fullname"));
                     intent.putExtra("Id", new JSONObject(responseOutput.toString()).getString("Id").toString());
                     startActivity(intent);
+                    //prevent going back by press back button
+                    finish();
                 }else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
                     Toast.makeText(LoginActivity.this, "Tên hoặc mật khẩu không đúng", Toast.LENGTH_SHORT).show();
                 }

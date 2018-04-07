@@ -1,10 +1,15 @@
 package com.example.project.mobilecapstone.Fragment;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,9 +23,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.project.mobilecapstone.Activity.HomeActivity;
 import com.example.project.mobilecapstone.Data.UserInfo;
 import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.R;
+import com.example.project.mobilecapstone.Utils.TrackingService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,6 +50,7 @@ import static android.content.ContentValues.TAG;
 
 public class TrackingFragment extends Fragment {
 
+    SwipeRefreshLayout swipeRefreshLayout;
     Button btn_createDevice;
     ArrayList<String> arr = new ArrayList<String>();
     private String IMEI = "";
@@ -51,20 +59,38 @@ public class TrackingFragment extends Fragment {
     private int userId = Integer.parseInt(UserInfo.Id);
     ListView listview;
     TrackerListAdapter adapter;
-
+    android.support.v4.app.FragmentManager fragmentManager;
+    android.support.v4.app.FragmentTransaction transaction;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_tracking, container, false);
         //return inflater.inflate(R.layout.fragment_tracking, container, false);
+        new GetListDevice().execute();
         return rootView;
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        new GetListDevice().execute();
+        swipeRefreshLayout = getView().findViewById(R.id.swipeLayout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @SuppressLint("ResourceAsColor")
+            @Override
+            public void onRefresh() {
+                final FragmentManager mng = getActivity().getSupportFragmentManager();
+                swipeRefreshLayout.setColorSchemeResources(R.color.Refresh1,R.color.Refresh2,R.color.Refresh3,R.color.Refresh4);
+                swipeRefreshLayout.setRefreshing(true);
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        swipeRefreshLayout.setRefreshing(false);
+                        mng.beginTransaction().replace(R.id.content_main,new TrackingFragment()).commit();
+                    }
+                },1000);
+            }
+        });
         listview = getView().findViewById(R.id.device_list);
         adapter = new TrackerListAdapter();
         //add a device form button and handler
@@ -117,6 +143,12 @@ public class TrackingFragment extends Fragment {
             }
         });
     }
+    //change actionbar Title
+    @Override
+    public void onResume() {
+        super.onResume();
+        ((HomeActivity) getActivity()).setActionBarTitle(getString(R.string.ACTION_BAR_TITLE_DEVICES));
+    }
 
     class TrackerListAdapter extends BaseAdapter implements ListAdapter {
 
@@ -157,10 +189,11 @@ public class TrackingFragment extends Fragment {
             btn_track.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-//                    Intent intent = new Intent(getContext(), TrackingService.class);
-//                    intent.putExtra("id",deviceId.getText());
-//                    getActivity().startService(intent);
                     new getLocation().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, deviceId.getText().toString());
+                    Intent intent = new Intent(getContext(), TrackingService.class);
+                    intent.putExtra("id",deviceId.getText());
+                    getActivity().startService(intent);
+//
                 }
             });
             return v;
@@ -319,20 +352,23 @@ public class TrackingFragment extends Fragment {
         protected void onPostExecute(String s) {
             try {
                 String device = responseOutput.toString();
-                double latitude = new JSONObject(device).getDouble("Latitude");
-                double longitude = new JSONObject(device).getDouble("Longitude");
-//                longitude = 106.6295536;
-//                latitude = 10.8529728;
-                Log.e(TAG, "onPostExecute: " + latitude + longitude);
-                Bundle bundle = new Bundle();
-                bundle.putDouble("LAT", latitude);
-                bundle.putDouble("LONG", longitude);
-
-                android.support.v4.app.FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                android.support.v4.app.FragmentTransaction transaction = fragmentManager.beginTransaction();
-                MapFragment map = new MapFragment();
-                map.setArguments(bundle);
-                transaction.replace(R.id.content_main, map).commit();
+                sharedData.LAT = new JSONObject(device).getDouble("Latitude");
+                sharedData.LONG = new JSONObject(device).getDouble("Longitude");
+                sharedData.ALT = new JSONObject(device).getDouble("Altitude");
+//                double latitude = new JSONObject(device).getDouble("Latitude");
+//                double longitude = new JSONObject(device).getDouble("Longitude");
+//                double altitude = new JSONObject(device).getDouble("Altitude");
+                Log.e(TAG, "onPostExecute: " +  sharedData.LAT  + sharedData.LONG);
+//                Bundle bundle = new Bundle();
+//                bundle.putDouble("LAT", latitude);
+//                bundle.putDouble("LONG", longitude);
+//                bundle.putDouble("ALT", altitude);
+                fragmentManager = getActivity().getSupportFragmentManager();
+                transaction = fragmentManager.beginTransaction();
+                MapTrackingFragment map = new MapTrackingFragment();
+//                map.setArguments(bundle);
+                transaction.replace(R.id.content_main, map);
+                transaction.commit();
             } catch (JSONException e) {
                 e.printStackTrace();
             }

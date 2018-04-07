@@ -60,6 +60,10 @@
         <service
             android:name=".Utils.PositionService"
             android:exported="false" />
+        <service
+            android:name=".Utils.TrackingService"
+            android:enabled="true"
+            android:exported="false"/>
     </application>
 
 </manifest>
