@@ -83,6 +83,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     Button btnSearch;
     private static final int REQUEST_CODE_ROOM = 0x9345;
     Fragment fragment;
+    boolean first = true;
     private String result = "";
 //    private String isMoving;
 //    private Sensor mySensor;
@@ -207,7 +208,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     //create View with Canvas for map
     private class CanvasMapView extends View {
         Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        boolean first = true;
 
         public CanvasMapView(Context context) {
             super(context);
@@ -233,13 +233,16 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
-//                altitude = 15.0;
-                latitude = 10.85296;
-                longitude = 106.629554;
+//                altitude = 10;
+//                latitude = 10.8530148;
+//                longitude = 106.6294312;
             } else {
                 gps.showSettingAlert();
             }
-
+            if (first) {
+                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
+            }
             String filename = "floor1";
             Bitmap map;
             Bitmap scaleMap;
@@ -294,11 +297,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                     e.printStackTrace();
                 }
             }
-            if (first) {
-                first = false;
-                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
-            }
+
             String path = sharedData.storage + filename + ".png";
             final File temp = new File(sharedData.storage + filename + ".png");
 
@@ -307,8 +306,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             map = BitmapFactory.decodeFile(path);
             scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
-            if (first == false) {
 
+            if (first == false) {
                 Bundle bundle = fragment.getArguments();
                 if (bundle != null) {
                     deviceLat = bundle.getDouble("LAT");
@@ -332,6 +331,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                     canvas.drawCircle(devicePosX, devicePosY, 10, mPaint);
                 }
             }
+
             if (roomPosX != 0 || roomPosY != 0) {
                 mPaint.setColor(Color.CYAN);
                 canvas.drawCircle(roomPosX, roomPosY, 10, mPaint);
@@ -342,7 +342,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
 
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +
                             latitude + "\nLong: " + longitude + "\nAltitude: " + altitude
-                            + "\nX: " + posX + "\nY: " + posY + "\nfloor" + mapId,
+                            + "\nX: " + posX + "\nY: " + posY + "\nmapId" + mapId,
                     Toast.LENGTH_LONG).show();
         }
 
@@ -373,6 +373,9 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             min = perpendicular;
             corner = 4;
         }
+        Log.e("perpendicular: ", min + "");
+        float checkX = 0;
+        float checkY = 0;
         if (isDevice) {
             if (corner == 1) {
                 //29  18
@@ -388,7 +391,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
                 double x = min + 3;
                 devicePosX = (float) (width / distanceCorner * x);
-//                posX = width / 18 * ((float) (rooms[0].getWidth()));
             } else if (corner == 3) {
                 Corner currentCorner1 = corners[2];
                 Corner currentCorner2 = corners[3];
@@ -437,13 +439,11 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double temp = Utils.getPixelWithPer(min, distance2);
-                posY = (float) (height / distanceCorner * temp);
+                checkY = (float) (height / distanceCorner * temp);
                 currentCorner2 = corners[2];
                 distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
-                double x = min;
-                posX = (float) (width / distanceCorner * x);
-//                posX = width / 18 * ((float) (rooms[0].getWidth()));
+                checkX = (float) (width / distanceCorner * min);
             } else if (corner == 3) {
                 Corner currentCorner1 = corners[2];
                 Corner currentCorner2 = corners[3];
@@ -451,36 +451,42 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double temp = Utils.getPixelWithPer(min, distance2);
-                posY = (float) (height / distanceCorner * temp);
+                checkY = (float) (height / distanceCorner * temp);
                 currentCorner2 = corners[1];
                 distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
-                double x = distanceCorner - (min + 3);
-                posX = (float) (width / distanceCorner * x);
+                double x = distanceCorner - (min);
+                checkX = (float) (width / distanceCorner * x);
             } else if (corner == 2) {
                 Corner currentCorner1 = corners[2];
                 Corner currentCorner2 = corners[1];
-                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
-                double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
-                        currentCorner1.getLatitude(), currentCorner1.getLongitude());
-                double temp = Utils.getPixelWithPer(min, distance2) + 3;
-                posY = (float) (height / distanceCorner * temp);
-                currentCorner2 = corners[3];
-                distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
-                        currentCorner2.getLatitude(), currentCorner2.getLongitude());
-                posX = (float) (width / distanceCorner * min);
-            } else if (corner == 4) {
-                Corner currentCorner1 = corners[3];
-                Corner currentCorner2 = corners[0];
-                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner2.getLatitude(), currentCorner2.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double temp = Utils.getPixelWithPer(min, distance2);
-                posY = (float) (height / distanceCorner * temp) + 3;
+                checkX = (float) (width / distanceCorner * temp);
+                currentCorner1 = corners[0];
+                distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
+                        currentCorner2.getLatitude(), currentCorner2.getLongitude());
+                checkY = (float) (height / distanceCorner * min);
+            } else if (corner == 4) {
+                Corner currentCorner1 = corners[3];
+                Corner currentCorner2 = corners[0];
+                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner2.getLatitude(), currentCorner2.getLongitude());
+                double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
+                        currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double temp = Utils.getPixelWithPer(min, distance2);
+                checkX = (float) (width / distanceCorner * temp);
                 currentCorner2 = corners[2];
                 distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
-                posX = (float) (width / distanceCorner * min);
+                double x = distanceCorner - min;
+                checkY = (float) (height / distanceCorner * x);
+            }
+
+            if ((checkX <= width && checkX >= 0) && (checkY <= height && checkY >= 0)) {
+                posX = checkX;
+                posY = checkY;
             }
         }
     }
