@@ -171,6 +171,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        new CanvasAsyncTask(MapFragment.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        new CanvasReDraw().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         swipeRefreshLayout = getView().findViewById(R.id.swipeLayout);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
