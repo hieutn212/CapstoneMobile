@@ -2,6 +2,7 @@ package com.example.project.mobilecapstone.Fragment;
 
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
+import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -53,12 +54,14 @@ import java.util.ArrayList;
 import javax.net.ssl.HttpsURLConnection;
 
 
-public class MapFragment extends Fragment implements View.OnClickListener{
+public class MapFragment extends Fragment implements View.OnClickListener {
+
     public boolean stopTask = false;
     GPSRouter gps;
     static double latitude;
     static double longitude;
     static double altitude;
+    int mapId = 0;
     static float posX = 0;
     static float posY = 0;
     static double deviceLat = 0;
@@ -80,6 +83,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
     static int height = 0;
     private static final String TAG = "MapFragment";
     CanvasMapView canvasMapView;
+    boolean reDraw = false;
     View v;
     Button btnSearch;
     private static final int REQUEST_CODE_ROOM = 0x9345;
@@ -108,17 +112,17 @@ public class MapFragment extends Fragment implements View.OnClickListener{
 //        //register sensor listener
 //        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
         downloadManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
-        sharedPreference = getActivity().getSharedPreferences("ROOM_CORNER_INFO",getActivity().MODE_PRIVATE);
+        sharedPreference = getActivity().getSharedPreferences("ROOM_CORNER_INFO", getActivity().MODE_PRIVATE);
         editor = sharedPreference.edit();
-        new GetListMap().execute();
+        new GetListMap().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         /*do {
 
         } while (!result.equals("Finish"));*/
-        new CanvasAsyncTask(MapFragment.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//        new CanvasAsyncTask(MapFragment.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 //        new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
 //        new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
         this.getArguments();
-        getActivity();
+
         fragment = this;
         // Inflate the layout for this fragment
         v = inflater.inflate(R.layout.fragment_map, container, false);
@@ -138,26 +142,24 @@ public class MapFragment extends Fragment implements View.OnClickListener{
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()){
+        switch (view.getId()) {
             case R.id.buttonSearch:
                 Intent i = new Intent(getActivity(), MapSearchActivity.class);
                 startActivityForResult(i, REQUEST_CODE_ROOM);
                 break;
         }
-
     }
 
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode==REQUEST_CODE_ROOM)
-        {
-            if(resultCode == 1){
+        if (requestCode == REQUEST_CODE_ROOM) {
+            if (resultCode == 1) {
                 //Draw a room point
-                data.getIntExtra("PosAX",0);
-                roomPosX = Utils.getPixel(width / 12, data.getIntExtra("PosAX", 0)  , data.getIntExtra("PosBX",0));
-                roomPosY = Utils.getPixel(width / 12, data.getIntExtra("PosAY", 0) , data.getIntExtra("PosBY",0) );
+                data.getIntExtra("PosAX", 0);
+                roomPosX = Utils.getPixel(width / 12, data.getIntExtra("PosAX", 0), data.getIntExtra("PosBX", 0));
+                roomPosY = Utils.getPixel(width / 12, data.getIntExtra("PosAY", 0), data.getIntExtra("PosBY", 0));
 
             }
             if (resultCode == 0) {
@@ -252,19 +254,21 @@ public class MapFragment extends Fragment implements View.OnClickListener{
 
             //get location from GPSRouter class
             Context context = this.getContext();
+
             gps = new GPSRouter(context);
             if (gps.canGetLocation()) {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
-//                altitude = gps.getAltitude();
-                altitude = 15.0;
-//            latitude = 10.8529728;
-//            longitude = 106.6295536;
+                altitude = gps.getAltitude();
+//                altitude = 15.0;
+                latitude = 10.85296;
+                longitude = 106.629554;
             } else {
                 gps.showSettingAlert();
             }
+
             String filename = "floor1";
-            Bitmap map ;
+            Bitmap map;
             Bitmap scaleMap;
             //get location from GPSRouter class
             for (int i = 0; i < listMap.size(); i++) {
@@ -276,35 +280,38 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                         altitudeMap2 = new JSONObject(listMap.get(i + 1)).getDouble("Altitude");
                         if (altitude == 0.0) {
                             filename = "floor1";
+                            mapId = 1;
                             break;
                         } else if (altitudeMap1 <= altitude && altitude < altitudeMap2) {
                             filename = nameMap;
-                            currentFloor = filename.substring(filename.length()-1);
-                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR",""))){
-                                String roomJson = sharedPreference.getString("ROOMLIST",null);
-                                String cornerJson = sharedPreference.getString("CORNERLIST",null);
+                            mapId = new JSONObject(listMap.get(i)).getInt("Id");
+                            currentFloor = filename.substring(filename.length() - 1);
+                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR", ""))) {
+                                String roomJson = sharedPreference.getString("ROOMLIST", null);
+                                String cornerJson = sharedPreference.getString("CORNERLIST", null);
                                 convertToCornerArray(cornerJson);
                                 convertToRoomArray(roomJson);
-                            }else{
-                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-                                editor.putString("LASTFLOOR",currentFloor).apply();
+                            } else {
+                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
+                                editor.putString("LASTFLOOR", currentFloor).apply();
                             }
                             break;
                         }
                     } else {
                         if (altitudeMap1 <= altitude) {
                             filename = nameMap;
-                            currentFloor = filename.substring(filename.length()-1);
-                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR",""))){
-                                String roomJson = sharedPreference.getString("ROOMLIST",null);
-                                String cornerJson = sharedPreference.getString("CORNERLIST",null);
+                            mapId = new JSONObject(listMap.get(i)).getInt("Id");
+                            currentFloor = filename.substring(filename.length() - 1);
+                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR", ""))) {
+                                String roomJson = sharedPreference.getString("ROOMLIST", null);
+                                String cornerJson = sharedPreference.getString("CORNERLIST", null);
                                 convertToCornerArray(cornerJson);
                                 convertToRoomArray(roomJson);
-                            }else{
-                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-                                editor.putString("LASTFLOOR",currentFloor).apply();
+                            } else {
+                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
+                                editor.putString("LASTFLOOR", currentFloor).apply();
                             }
                             break;
                         }
@@ -314,11 +321,11 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                     e.printStackTrace();
                 }
             }
-//            if (first) {
-//                first = false;
-//                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-//                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-//            }
+            if (first) {
+                first = false;
+                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
+            }
             String path = sharedData.storage + filename + ".png";
             final File temp = new File(sharedData.storage + filename + ".png");
 
@@ -334,29 +341,35 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                     deviceLat = bundle.getDouble("LAT");
                     deviceLong = bundle.getDouble("LONG");
                 }
-                getPointMap(latitude, longitude, false);
-                if (deviceLat != 0 || deviceLong != 0) {
-                    getPointMap(deviceLat, deviceLong, true);
+                if (reDraw) {
+                    double latitudeUpdate = latitude;
+                    double longitudeUpdate = longitude;
+                    getPointMap(latitudeUpdate, longitudeUpdate, false);
+                    reDraw = false;
                 }
                 if (posX != 0 || posY != 0) {
                     mPaint.setColor(Color.BLUE);
                     canvas.drawCircle(posX, posY, 10, mPaint);
+                }
+                if (deviceLat != 0 || deviceLong != 0) {
+                    getPointMap(deviceLat, deviceLong, true);
                 }
                 if (devicePosX != 0 || devicePosY != 0) {
                     mPaint.setColor(Color.GREEN);
                     canvas.drawCircle(devicePosX, devicePosY, 10, mPaint);
                 }
             }
-            if(roomPosX !=0 || roomPosY !=0){
-                mPaint.setColor(Color.RED);
-                canvas.drawCircle(roomPosX , roomPosY,10, mPaint);
+            if (roomPosX != 0 || roomPosY != 0) {
+                mPaint.setColor(Color.CYAN);
+                canvas.drawCircle(roomPosX, roomPosY, 10, mPaint);
             }
             if (corners != null && corners.length == 4) {
                 first = false;
             }
 
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +
-                            latitude + "\nLong: " + longitude,
+                            latitude + "\nLong: " + longitude + "\nAltitude: " + altitude
+                            + "\nX: " + posX + "\nY: " + posY + "\nfloor" + mapId,
                     Toast.LENGTH_LONG).show();
         }
 
@@ -373,26 +386,25 @@ public class MapFragment extends Fragment implements View.OnClickListener{
         int corner = 1;
         double min = Utils.PerpendicularDistance(corners[0], corners[1], longitude, latitude);
         double perpendicular = Utils.PerpendicularDistance(corners[1], corners[2], longitude, latitude);
-        if (min > perpendicular) {
+        if (perpendicular <= min) {
             min = perpendicular;
             corner = 2;
         }
         perpendicular = Utils.PerpendicularDistance(corners[2], corners[3], longitude, latitude);
-        if (perpendicular < min) {
+        if (perpendicular <= min) {
             min = perpendicular;
             corner = 3;
         }
         perpendicular = Utils.PerpendicularDistance(corners[3], corners[0], longitude, latitude);
-        if (perpendicular < min) {
+        if (perpendicular <= min) {
             min = perpendicular;
             corner = 4;
         }
-
-        Corner currentCorner1 = corners[1];
-        Corner currentCorner2 = corners[0];
         if (isDevice) {
             if (corner == 1) {
                 //29  18
+                Corner currentCorner1 = corners[1];
+                Corner currentCorner2 = corners[0];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -405,8 +417,8 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                 devicePosX = (float) (width / distanceCorner * x);
 //                posX = width / 18 * ((float) (rooms[0].getWidth()));
             } else if (corner == 3) {
-                currentCorner1 = corners[2];
-                currentCorner2 = corners[3];
+                Corner currentCorner1 = corners[2];
+                Corner currentCorner2 = corners[3];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -418,8 +430,8 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                 double x = distanceCorner - (min + 3);
                 devicePosX = (float) (width / distanceCorner * x);
             } else if (corner == 2) {
-                currentCorner1 = corners[2];
-                currentCorner2 = corners[1];
+                Corner currentCorner1 = corners[2];
+                Corner currentCorner2 = corners[1];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -430,8 +442,8 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
                 devicePosX = (float) (width / distanceCorner * min);
             } else if (corner == 4) {
-                currentCorner1 = corners[3];
-                currentCorner2 = corners[0];
+                Corner currentCorner1 = corners[3];
+                Corner currentCorner2 = corners[0];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -443,8 +455,11 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                 devicePosX = (float) (width / distanceCorner * min);
             }
         } else {
+            Log.d("Corner:", corner + "");
             if (corner == 1) {
                 //29  18
+                Corner currentCorner1 = corners[1];
+                Corner currentCorner2 = corners[0];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -453,12 +468,12 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                 currentCorner2 = corners[2];
                 distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
-                double x = min + 3;
+                double x = min;
                 posX = (float) (width / distanceCorner * x);
 //                posX = width / 18 * ((float) (rooms[0].getWidth()));
             } else if (corner == 3) {
-                currentCorner1 = corners[2];
-                currentCorner2 = corners[3];
+                Corner currentCorner1 = corners[2];
+                Corner currentCorner2 = corners[3];
                 double distance2 = (float) Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -470,8 +485,8 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                 double x = distanceCorner - (min + 3);
                 posX = (float) (width / distanceCorner * x);
             } else if (corner == 2) {
-                currentCorner1 = corners[2];
-                currentCorner2 = corners[1];
+                Corner currentCorner1 = corners[2];
+                Corner currentCorner2 = corners[1];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -482,8 +497,8 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
                 posX = (float) (width / distanceCorner * min);
             } else if (corner == 4) {
-                currentCorner1 = corners[3];
-                currentCorner2 = corners[0];
+                Corner currentCorner1 = corners[3];
+                Corner currentCorner2 = corners[0];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -513,9 +528,8 @@ public class MapFragment extends Fragment implements View.OnClickListener{
         @Override
         protected Object doInBackground(Object[] objects) {
             try {
-                int mapId = Integer.parseInt(objects[0].toString());
-                int floor = Integer.parseInt(objects[1].toString());
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/GetListRoom?floor=" + floor + "&mapId=" + mapId);
+                int buildingId = Integer.parseInt(objects[0].toString());
+                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/GetListRoom?buildingId=" + buildingId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
@@ -528,7 +542,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                     }
                     br.close();
                     String json = responseOutput.toString();
-                    editor.putString("ROOMLIST",json).apply();
+                    editor.putString("ROOMLIST", json).apply();
                     convertToRoomArray(json);
                 }
             } catch (MalformedURLException e) {
@@ -562,7 +576,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
                     }
                     br.close();
                     String json = responseOutput.toString();
-                    editor.putString("CORNERLIST",json).apply();
+                    editor.putString("CORNERLIST", json).apply();
                     convertToCornerArray(json);
                 }
             } catch (MalformedURLException e) {
@@ -617,6 +631,27 @@ public class MapFragment extends Fragment implements View.OnClickListener{
             super.onPostExecute(o);
         }
 
+    }
+
+    public class CanvasReDraw extends AsyncTask<Void, Double, Void> {
+
+
+        public CanvasReDraw() {
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            while (stopTask == false) {
+                reDraw = true;
+                SystemClock.sleep(7000);
+            }
+            return null;
+        }
     }
 
     public class GetListMap extends AsyncTask<String, Void, String> {
@@ -704,7 +739,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
         Long reference = downloadManager.enqueue(request);
     }
 
-    public void convertToRoomArray(String json){
+    public void convertToRoomArray(String json) {
         try {
             JSONArray list = new JSONArray(json);
             int total = list.length();
@@ -724,7 +759,7 @@ public class MapFragment extends Fragment implements View.OnClickListener{
         }
     }
 
-    public void convertToCornerArray(String json){
+    public void convertToCornerArray(String json) {
         try {
             JSONArray list = new JSONArray(json);
             int total = list.length();
@@ -739,6 +774,26 @@ public class MapFragment extends Fragment implements View.OnClickListener{
         } catch (JSONException e) {
             Log.e(TAG, "doInBackground: CORNER", e);
             e.printStackTrace();
+        }
+    }
+
+    public class CanvasService extends IntentService {
+
+        @Override
+        public void onCreate() {
+            super.onCreate();
+        }
+
+        public CanvasService() {
+            super("CanvasService");
+        }
+
+        @Override
+        protected void onHandleIntent(@Nullable Intent intent) {
+            while (true) {
+                canvasMapView.invalidate();
+                SystemClock.sleep(3000);
+            }
         }
     }
 }
