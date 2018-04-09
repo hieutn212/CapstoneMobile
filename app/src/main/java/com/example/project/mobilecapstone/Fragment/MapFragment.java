@@ -181,14 +181,13 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             @SuppressLint("ResourceAsColor")
             @Override
             public void onRefresh() {
-                final FragmentManager mng = getActivity().getSupportFragmentManager();
                 swipeRefreshLayout.setColorSchemeResources(R.color.Refresh1, R.color.Refresh2, R.color.Refresh3, R.color.Refresh4);
                 swipeRefreshLayout.setRefreshing(true);
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         swipeRefreshLayout.setRefreshing(false);
-                        mng.beginTransaction().replace(R.id.content_main, new MapFragment()).commit();
+                        canvasMapView.invalidate();
                     }
                 }, 1000);
             }
@@ -252,10 +251,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
-            if (first) {
-                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
-            }
+
             height = getHeight();
             width = getWidth();
 
@@ -267,9 +263,9 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
-//                altitude = 15.0;
-                latitude = 10.85296;
-                longitude = 106.629554;
+                altitude = 15.0;
+//                latitude = 10.85296;
+//                longitude = 106.629554;
             } else {
                 gps.showSettingAlert();
             }
@@ -369,8 +365,10 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 mPaint.setColor(Color.CYAN);
                 canvas.drawCircle(roomPosX, roomPosY, 10, mPaint);
             }
-            if (corners != null && corners.length == 4) {
-                first = false;
+            if (corners != null) {
+                if (corners.length == 4) {
+                    first = false;
+                }
             }
 
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +

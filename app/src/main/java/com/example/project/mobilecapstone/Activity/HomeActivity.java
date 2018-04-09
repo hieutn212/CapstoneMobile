@@ -38,7 +38,7 @@ public class HomeActivity extends AppCompatActivity
     FragmentManager fm = getSupportFragmentManager();
     UserInfo userInfo = new UserInfo();
     private static final String TAG = "HomeActivity";
-    List<Fragment> fragmentList ;
+    List<Fragment> fragmentList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,12 +66,13 @@ public class HomeActivity extends AppCompatActivity
         txtFullname.setText(userInfo.getFullName());
         //check for permissions
         checkPermissions();
+
         fm.beginTransaction().replace(R.id.content_main, new MapFragment()).commit();
         //set home fragment selected on launch
 
     }
 
-    private void checkPermissions(){
+    private void checkPermissions() {
         if (ContextCompat.checkSelfPermission(HomeActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
         } else {
             requestLocationPermission();
@@ -114,6 +115,7 @@ public class HomeActivity extends AppCompatActivity
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, 1);
         }
     }
+
     //Request user for location permission
     private void requestLocationPermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
@@ -135,6 +137,7 @@ public class HomeActivity extends AppCompatActivity
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
         }
     }
+
     //request user to read storage
     private void requestReadPermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
@@ -156,6 +159,7 @@ public class HomeActivity extends AppCompatActivity
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 3);
         }
     }
+
     //request user to write storage
     private void requestWritePermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
@@ -177,6 +181,7 @@ public class HomeActivity extends AppCompatActivity
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 4);
         }
     }
+
     //Notify user about requested permission
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -219,9 +224,9 @@ public class HomeActivity extends AppCompatActivity
             new AlertDialog.Builder(this).setTitle("Thoát ứng dụng").setMessage("Bạn có muốn thoát ứng dụng ?").setPositiveButton("Thoát", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    fragmentList= fm.getFragments();
-                    Fragment temp = fragmentList.get(fragmentList.size()-1);
-                    if (temp.getClass().toString() == MapFragment.class.toString()){
+                    fragmentList = fm.getFragments();
+                    Fragment temp = fragmentList.get(fragmentList.size() - 1);
+                    if (temp.getClass().toString() == MapFragment.class.toString()) {
                         MapFragment fragment = (MapFragment) temp;
                         fragment.stopTask = true;
                     }
@@ -265,6 +270,11 @@ public class HomeActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
+        if (item.isChecked()) {
+            item.setChecked(false);
+        } else {
+            item.setChecked(true);
+        }
         int id = item.getItemId();
 
         /*if (id == R.id.nav_search) {
@@ -277,9 +287,9 @@ public class HomeActivity extends AppCompatActivity
             transaction.addToBackStack(null);
             transaction.commit();
         } else if (id == R.id.nav_trackers) {
-            fragmentList= fm.getFragments();
-            Fragment temp = fragmentList.get(fragmentList.size()-1);
-            if (temp.getClass().toString() == MapFragment.class.toString()){
+            fragmentList = fm.getFragments();
+            Fragment temp = fragmentList.get(fragmentList.size() - 1);
+            if (temp.getClass().getName().equals(MapFragment.class.getName())) {
                 MapFragment fragment = (MapFragment) temp;
                 fragment.stopTask = true;
             }
@@ -293,13 +303,13 @@ public class HomeActivity extends AppCompatActivity
             new AlertDialog.Builder(this).setTitle("Đăng xuất ?").setMessage("Bạn có muốn đăng xuất ?").setPositiveButton("Có", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    fragmentList= fm.getFragments();
-                    Fragment temp = fragmentList.get(fragmentList.size()-1);
-                    if (temp.getClass().toString() == MapFragment.class.toString()){
+                    fragmentList = fm.getFragments();
+                    Fragment temp = fragmentList.get(fragmentList.size() - 1);
+                    if (temp.getClass().toString() == MapFragment.class.toString()) {
                         MapFragment fragment = (MapFragment) temp;
                         fragment.stopTask = true;
                     }
-                    Intent intent = new Intent(HomeActivity.this,LoginActivity.class);
+                    Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
                     startActivity(intent);
                     finish();
                 }
@@ -316,6 +326,7 @@ public class HomeActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
     //Save logged in user info
     public void getUserInfo() {
         userInfo.setId(getIntent().getStringExtra("Id"));
@@ -325,7 +336,7 @@ public class HomeActivity extends AppCompatActivity
     }
 
     //set Actionbar title
-    public void setActionBarTitle(String title){
+    public void setActionBarTitle(String title) {
         getSupportActionBar().setTitle(title);
     }
 }
