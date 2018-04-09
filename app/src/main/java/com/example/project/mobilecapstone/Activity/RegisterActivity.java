@@ -37,6 +37,7 @@ public class RegisterActivity extends AppCompatActivity {
     EditText txtUsername;
     EditText txtPassword;
     EditText txtFullname;
+    EditText txtConfirm;
     EditText txtDoB;
     Button btnDate, btnRegister;
     String username, password, fullname, DoB;
@@ -50,6 +51,7 @@ public class RegisterActivity extends AppCompatActivity {
         txtUsername = findViewById(R.id.input_username);
         txtPassword = findViewById(R.id.input_password);
         txtFullname = findViewById(R.id.input_fullname);
+        txtConfirm = findViewById(R.id.input_pConfirm);
         txtDoB = findViewById(R.id.input_DoB);
         btnDate = findViewById(R.id.btn_date_pick);
         btnRegister = findViewById(R.id.btn_signup);
@@ -61,6 +63,7 @@ public class RegisterActivity extends AppCompatActivity {
                 int month = calendar.get(Calendar.MONTH);
                 int day = calendar.get(Calendar.DAY_OF_MONTH);
                 DatePickerDialog dialog = new DatePickerDialog(RegisterActivity.this, listener, year, month, day);
+                dialog.getDatePicker().setMaxDate(System.currentTimeMillis());
                 dialog.show();
             }
         });
@@ -76,6 +79,11 @@ public class RegisterActivity extends AppCompatActivity {
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                boolean valid = validate();
+                if (!valid){
+                    Toast.makeText(RegisterActivity.this,"Thông tin không hợp lệ, xin thử lại !",Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 new CreateAccount().execute();
             }
         });
@@ -181,5 +189,44 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
+public Boolean validate(){
+        boolean valid = true;
+        String username = txtUsername.getText().toString();
+        String password = txtPassword.getText().toString();
+        String fullname = txtFullname.getText().toString();
+        String confirm = txtConfirm.getText().toString();
+        String birthdate = txtDoB.getText().toString();
 
+        if (username.isEmpty() || username.length() < 8){
+            txtUsername.setError("Tên tài khoản tối thiểu 8 ký tự");
+            valid = false;
+        }else{
+            txtUsername.setError(null);
+        }
+        if (password.isEmpty() || password.length() < 8){
+            txtPassword.setError("Mật khẩu tối thiểu 8 ký tự");
+            valid = false;
+        }else{
+            txtPassword.setError(null);
+        }
+        if (fullname.isEmpty() || fullname.length() < 8){
+            txtFullname.setError("Họ tên tối thiểu 8 ký tự");
+            valid = false;
+        }else{
+            txtFullname.setError(null);
+        }
+        if (confirm.isEmpty() || !confirm.equals(password)){
+            txtConfirm.setError("Xác nhận mật khẩu không đúng");
+            valid = false;
+        }else{
+            txtConfirm.setError(null);
+        }
+        if (birthdate.isEmpty()){
+            txtDoB.setError("Ngày sinh không hợp lệ");
+            valid = false;
+        }else{
+            txtDoB.setError(null);
+        }
+        return valid;
+    }
 }

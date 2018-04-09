@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -58,7 +59,6 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
         txtUsername = findViewById(R.id.input_username);
         txtPassword = findViewById(R.id.input_password);
         //check state permission
@@ -164,8 +164,9 @@ public class LoginActivity extends AppCompatActivity {
     }*/
 
     public class CheckLogin extends AsyncTask<String, Void, String> {
-        int responseCode ;
+        int responseCode;
         StringBuilder responseOutput;
+
         @Override
         protected void onPreExecute() {
 
@@ -177,7 +178,7 @@ public class LoginActivity extends AppCompatActivity {
         protected String doInBackground(String... strings) {
             try {
                 URL url = new URL("http://" + sharedData.IP + ":57305/api/User/Get?username=" + username + "&password=" + password);
-                Log.e(TAG, "doInBackground: Login url" +sharedData.IP );
+                Log.e(TAG, "doInBackground: Login url" + sharedData.IP);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 responseCode = connection.getResponseCode();
@@ -215,9 +216,24 @@ public class LoginActivity extends AppCompatActivity {
                     startActivity(intent);
                     //prevent going back by press back button
                     finish();
-                }else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
                     Toast.makeText(LoginActivity.this, "Tên hoặc mật khẩu không đúng", Toast.LENGTH_SHORT).show();
+                } else if (responseCode == 417) {
+                    new AlertDialog.Builder(LoginActivity.this).setTitle("Tài khoản hết hạn").setMessage("Tài khoản này đã hết hạn bản quyền.\nBạn có muốn đến trang web để gia hạn tài khoản ?").setPositiveButton("Đến web", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://" + sharedData.IP + ":36110/"));
+                            startActivity(browserIntent);
+                        }
+                    }).setNegativeButton("Không", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+
+                        }
+                    }).create().show();
+                    Toast.makeText(LoginActivity.this, "Tài khoản hết hạn sử dụng, vui lòng gia hạn bản quyền", Toast.LENGTH_SHORT).show();
                 }
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
