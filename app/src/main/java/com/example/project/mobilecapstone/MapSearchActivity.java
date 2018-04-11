@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,9 +14,11 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.example.project.mobilecapstone.Data.Room;
 import com.example.project.mobilecapstone.Data.sharedData;
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -37,20 +40,9 @@ public class MapSearchActivity extends AppCompatActivity {
     String roomName = null;
     int buildingId = 0;
     ListView lstView;
-    String[] lstSource = {
-
-            "101",
-            "103",
-            "105",
-            "107",
-            "109",
-            "111",
-            "113",
-            "115",
-            "102",
-            "Thư viện",
-            "116"
-    };
+    Room[] lstSource = null;
+    String[] lstName = null;
+    private static final String TAG = "MapSearchActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,17 +53,9 @@ public class MapSearchActivity extends AppCompatActivity {
         getSupportActionBar().setTitle("Search your Room ");
         toolbar.setTitleTextColor(Color.parseColor("#FFFFFF"));
 
-        lstView = (ListView) findViewById(R.id.lstView);
-        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, lstSource);
-        lstView.setAdapter(adapter);
-        lstView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                roomName = lstSource[position];
-                buildingId = 1;
-                new getRoom().execute();
-            }
-        });
+        lstView = findViewById(R.id.lstView);
+        new getRoomList().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
 
         searchView = (MaterialSearchView)findViewById(R.id.search_view);
         searchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
@@ -102,10 +86,10 @@ public class MapSearchActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) {
                 if(newText != null && !newText.isEmpty()){
-                    List<String> lstFound = new ArrayList<String>();
-                    for(String item:lstSource){
-                        if(item.contains(newText))
-                            lstFound.add(item);
+                    List<Room> lstFound = new ArrayList();
+                    for(Room r:lstSource){
+                        if(r.getName().contains(newText))
+                            lstFound.add(r);
                     }
 
                     ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this,android.R.layout.simple_list_item_1,lstFound);
@@ -121,6 +105,8 @@ public class MapSearchActivity extends AppCompatActivity {
             }
         });
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -152,18 +138,7 @@ public class MapSearchActivity extends AppCompatActivity {
                     }
                     br.close();
                     String json = responseOutput.toString();
-                    try {
-                        JSONObject obj = new JSONObject(json);
-                        Intent intent = new Intent();
-                        intent.putExtra("PosAX", obj.getInt("PosAX"));
-                        intent.putExtra("PosAY", obj.getInt("PosAY"));
-                        intent.putExtra("PosBX", obj.getInt("PosBX"));
-                        intent.putExtra("PosBY", obj.getInt("PosBY"));
-                        setResult(1, intent);
-                        MapSearchActivity.this.finish();
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+
                 }
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
@@ -173,6 +148,87 @@ public class MapSearchActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
             return null;
+        }
+    }
+
+    public class getRoomList extends AsyncTask<String,Void,String>{
+
+        int buildingId = 1;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/GetListRoom?buildingId=" + buildingId);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    StringBuilder responseOutput = new StringBuilder();
+                    String line = "";
+                    while ((line = br.readLine()) != null) {
+                        responseOutput.append(line);
+                    }
+                    br.close();
+                    String json = responseOutput.toString();
+                    convertToRoomArray(json);
+                }
+            } catch (MalformedURLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                Log.e(TAG, "doInBackground: ", e);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                Log.e(TAG, "doInBackground: ", e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this, android.R.layout.simple_list_item_1, lstName);
+            lstView.setAdapter(adapter);
+            lstView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        Intent intent = new Intent();
+                        intent.putExtra("PosAX", lstSource[position].getPosAX());
+                        intent.putExtra("PosAY", lstSource[position].getPosAY());
+                        intent.putExtra("PosBX", lstSource[position].getPosBX());
+                        intent.putExtra("PosBY", lstSource[position].getPosBY());
+                        setResult(1, intent);
+                        MapSearchActivity.this.finish();
+                    /*new getRoom().execute();*/
+                }
+            });
+        }
+    }
+    public void convertToRoomArray(String json) {
+        try {
+            JSONArray list = new JSONArray(json);
+            int total = list.length();
+            lstSource = new Room[total];
+            lstName = new String[total];
+            for (int i = 0; i < total; i++) {
+                JSONObject jsonObject = new JSONObject(list.get(i).toString());
+                Room newRoom = new Room(jsonObject.getInt("Id"), jsonObject.getString("Name"),
+                        jsonObject.getInt("Floor"), jsonObject.getDouble("Length"),
+                        jsonObject.getDouble("Width"), jsonObject.getInt("MapId"),
+                        jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"),
+                        jsonObject.getInt("PosAX"), jsonObject.getInt("PosAY"),
+                        jsonObject.getInt("PosBX"), jsonObject.getInt("PosBY"));
+                lstSource[i] = newRoom;
+                lstName[i] = jsonObject.getString("Name");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 }
