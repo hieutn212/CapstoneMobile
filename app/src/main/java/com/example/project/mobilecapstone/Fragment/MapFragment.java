@@ -90,6 +90,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     Fragment fragment;
     private String result = "";
     boolean first = true;
+    boolean downloadComplete = false;
 
 //    private String isMoving;
 //    private Sensor mySensor;
@@ -573,7 +574,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         protected Object doInBackground(Object[] objects) {
             try {
                 int mapId = Integer.parseInt(objects[0].toString());
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Corner/GetAllCornerWithMap?&mapId=" + mapId);
+                URL url = new URL("http://" + sharedData.IP + ":57305/api/Corner/GetAllCornerWithMap?mapId=" + mapId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();

@@ -102,7 +102,7 @@ public class MapTrackingFragment extends Fragment {
         this.getArguments();
         fragment = this;
         // Inflate the layout for this fragment
-        v = inflater.inflate(R.layout.fragment_map, container, false);
+        v = inflater.inflate(R.layout.fragment_trackingmap, container, false);
         return v;
     }
 
