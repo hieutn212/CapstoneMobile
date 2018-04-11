@@ -79,14 +79,13 @@ public class TrackingFragment extends Fragment {
             @SuppressLint("ResourceAsColor")
             @Override
             public void onRefresh() {
-                final FragmentManager mng = getActivity().getSupportFragmentManager();
                 swipeRefreshLayout.setColorSchemeResources(R.color.Refresh1,R.color.Refresh2,R.color.Refresh3,R.color.Refresh4);
                 swipeRefreshLayout.setRefreshing(true);
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         swipeRefreshLayout.setRefreshing(false);
-                        mng.beginTransaction().replace(R.id.content_main,new TrackingFragment()).commit();
+                        getView().invalidate();
                     }
                 },1000);
             }
