@@ -7,12 +7,13 @@ import android.os.Environment;
  */
 
 public class sharedData {
-    public static String IP = "10.82.131.150";
+    public static String IP = "5673320e.ngrok.io";
     public static String storage = Environment.getExternalStorageDirectory().getAbsolutePath() + "/LOAB/";
     //tracking location
     public static Double LAT = 10.0;
     public static Double LONG = 0.0;
     public static Double ALT = 0.0;
+    public static String DeviceIMEI = "";
     //search position
     public static float height;
     public static float width;

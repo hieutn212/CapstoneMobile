@@ -138,7 +138,6 @@ public class MapSearchActivity extends AppCompatActivity {
                     }
                     br.close();
                     String json = responseOutput.toString();
-
                 }
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block

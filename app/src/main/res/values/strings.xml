@@ -30,5 +30,7 @@
     <!-- map screen labels in vietnamese-->
     <string name="map_btn_search">Hãy chọn điểm đến</string>
     <string name="register_confirm_password">Xác nhận mật khẩu</string>
+    <string name="action_device_path">Xem đường đi ...</string>
+    <string name="dialog_time_picker">Chọn khoản thời gian</string>
 
 </resources>

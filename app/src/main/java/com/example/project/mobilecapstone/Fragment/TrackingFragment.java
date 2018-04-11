@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -189,6 +188,7 @@ public class TrackingFragment extends Fragment {
                 @Override
                 public void onClick(View view) {
                     new getLocation().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, deviceId.getText().toString());
+                    sharedData.DeviceIMEI = deviceId.getText().toString();
                     Intent intent = new Intent(getContext(), TrackingService.class);
                     intent.putExtra("id",deviceId.getText());
                     getActivity().startService(intent);
@@ -354,14 +354,7 @@ public class TrackingFragment extends Fragment {
                 sharedData.LAT = new JSONObject(device).getDouble("Latitude");
                 sharedData.LONG = new JSONObject(device).getDouble("Longitude");
                 sharedData.ALT = new JSONObject(device).getDouble("Altitude");
-//                double latitude = new JSONObject(device).getDouble("Latitude");
-//                double longitude = new JSONObject(device).getDouble("Longitude");
-//                double altitude = new JSONObject(device).getDouble("Altitude");
                 Log.e(TAG, "onPostExecute: " +  sharedData.LAT  + sharedData.LONG);
-//                Bundle bundle = new Bundle();
-//                bundle.putDouble("LAT", latitude);
-//                bundle.putDouble("LONG", longitude);
-//                bundle.putDouble("ALT", altitude);
                 fragmentManager = getActivity().getSupportFragmentManager();
                 transaction = fragmentManager.beginTransaction();
                 MapTrackingFragment map = new MapTrackingFragment();

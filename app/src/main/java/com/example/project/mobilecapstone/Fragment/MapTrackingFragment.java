@@ -1,9 +1,9 @@
 package com.example.project.mobilecapstone.Fragment;
 
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.app.DownloadManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -24,17 +25,17 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.NumberPicker;
 import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Activity.HomeActivity;
 import com.example.project.mobilecapstone.Data.Corner;
 import com.example.project.mobilecapstone.Data.Room;
 import com.example.project.mobilecapstone.Data.sharedData;
-import com.example.project.mobilecapstone.MapSearchActivity;
 import com.example.project.mobilecapstone.R;
-import com.example.project.mobilecapstone.Utils.GPSRouter;
 import com.example.project.mobilecapstone.Utils.Utils;
 
 import org.json.JSONArray;
@@ -70,10 +71,14 @@ public class MapTrackingFragment extends Fragment {
     SharedPreferences.Editor editor;
     ArrayList<String> listMap = new ArrayList<String>();
     Integer buildingId;
+    private String TrackingId = "";
     private DownloadManager downloadManager;
     public SwipeRefreshLayout swipeRefreshLayout;
+    private FloatingActionButton fab;
+    NumberPicker picker;
     static int width = 0;
     static int height = 0;
+    int time = 0;
     private static final String TAG = "MapTrackingFragment";
     CanvasMapView canvasMapView;
     View v;
@@ -87,7 +92,6 @@ public class MapTrackingFragment extends Fragment {
 //    private float[] values;
 
     public MapTrackingFragment() {
-
     }
 
     @Override
@@ -103,8 +107,15 @@ public class MapTrackingFragment extends Fragment {
         fragment = this;
         // Inflate the layout for this fragment
         v = inflater.inflate(R.layout.fragment_trackingmap, container, false);
+        /*setHasOptionsMenu(true);*/
         return v;
     }
+
+    /*@Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_device_path,menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }*/
 
     @Override
     public void onResume() {
@@ -132,6 +143,33 @@ public class MapTrackingFragment extends Fragment {
                 }, 1000);
             }
         });
+
+        fab = getView().findViewById(R.id.btn_track_path);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Dialog dialog = new Dialog(getContext());
+                dialog.setCancelable(true);
+                dialog.setContentView(R.layout.dialog_time_picker);
+                //window manager to set dialog attributes
+                WindowManager.LayoutParams params = new WindowManager.LayoutParams();
+                params.copyFrom(dialog.getWindow().getAttributes());
+                params.width = WindowManager.LayoutParams.MATCH_PARENT;
+                Button btn_set = getView().findViewById(R.id.btnSetTime);
+                picker = getView().findViewById(R.id.minutePicker);
+                picker.setMaxValue(15);
+                picker.setMinValue(2);
+                picker.setWrapSelectorWheel(false);
+                btn_set.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        time = picker.getValue();
+                        new getDevicePath().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    }
+                });
+                dialog.show();
+            }
+        });
     }
 
 
@@ -156,7 +194,7 @@ public class MapTrackingFragment extends Fragment {
             height = getHeight();
             width = getWidth();
 
-            //get location from GPSRouter class
+            //get location from Tracking fragment
             latitude = sharedData.LAT;
             longitude = sharedData.LONG;
             altitude = sharedData.ALT;
@@ -388,7 +426,6 @@ public class MapTrackingFragment extends Fragment {
     }
 
 
-
     public class initListCorner extends AsyncTask {
 
 
@@ -533,6 +570,59 @@ public class MapTrackingFragment extends Fragment {
         }
     }
 
+    public class getDevicePath extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                URL url = new URL("http://" + sharedData.IP + ":57305/api/Position/trackingProductWithTime?deviceId=" + sharedData.DeviceIMEI + "&timeSearch=" + time);
+                Log.e(TAG, "doInBackground: GetListMap" + sharedData.IP);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                int responseCode = connection.getResponseCode();
+                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String line = "";
+                final StringBuilder responseOutput = new StringBuilder();
+                while ((line = br.readLine()) != null) {
+                    responseOutput.append(line);
+                }
+                //logging
+                Log.e(TAG, "doInBackground: getListMap" + responseOutput.toString());
+                br.close();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    String json = responseOutput.toString();
+                    JSONArray list = new JSONArray(json);
+                    int total = list.length();
+                    if (total > 0){
+                        for (int i = 0; i < total; i++) {
+                            JSONObject obj = new JSONObject(list.get(i).toString());
+                            latitude = obj.getDouble("Latitude");
+                            longitude = obj.getDouble("Longitude");
+                            altitude = obj.getDouble("Altitude");
+                            getPointMap(latitude,longitude,true);
+                            Canvas canvas = new Canvas();
+                            Paint mPaint = initPaint();
+                            canvas.drawCircle(posX,posY,10,mPaint);
+                        }
+                    }
+                    if (total == 0){
+                        Toast.makeText(getActivity(),"Không có dữ liệu của thiết bị trong thời gian này !",Toast.LENGTH_SHORT).show();
+                    }
+                }
+                if (responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
+                    Toast.makeText(getActivity(),"Đã có lỗi xảy ra",Toast.LENGTH_SHORT).show();
+                }
+            } catch (MalformedURLException e) {
+                Log.e(TAG, "doInBackground: GetListMap", e);
+            } catch (IOException e) {
+                Log.e(TAG, "doInBackground: GetListMap", e);
+            } catch (JSONException e) {
+                Log.e(TAG, "doInBackground: GetListMap", e);
+            }
+            return null;
+        }
+    }
+
     //convert json object to array
     public void convertToArray(String s) throws JSONException {
         JSONArray array = new JSONArray(s);
@@ -587,5 +677,15 @@ public class MapTrackingFragment extends Fragment {
             Log.e(TAG, "doInBackground: CORNER", e);
             e.printStackTrace();
         }
+    }
+
+    private Paint initPaint() {
+        Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaint.setColor(Color.BLUE);
+        mPaint.setStrokeWidth(20);
+        mPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        mPaint.setStrokeCap(Paint.Cap.ROUND); // Cho dau cac duong ve duoc bo tron
+        mPaint.setAlpha(150);
+        return mPaint;
     }
 }

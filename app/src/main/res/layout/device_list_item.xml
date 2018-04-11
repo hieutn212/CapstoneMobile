@@ -32,7 +32,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentTop="true"
             android:layout_weight="1"
-            android:text="Track"/>
+            android:text="Tìm"/>
 
     </LinearLayout>
 </RelativeLayout>
