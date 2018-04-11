@@ -14,9 +14,7 @@ public class sharedData {
     public static Double LONG = 0.0;
     public static Double ALT = 0.0;
     //search position
-    public static int PosAX = 0;
-    public static int PosAY = 0;
-    public static int PosBX = 0;
-    public static int PosBY = 0;
+    public static float height;
+    public static float width;
 
 }

@@ -55,21 +55,17 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class MapTrackingFragment extends Fragment {
     public boolean stopTask = false;
-    GPSRouter gps;
     static double latitude;
     static double longitude;
     static double altitude;
     static float posX = 0;
     static float posY = 0;
-    static double deviceLat = 0;
-    static double deviceLong = 0;
     static float devicePosX = 0;
     static float devicePosY = 0;
     private String currentFloor = "";
     public static Room[] rooms = null;
     public static Corner[] corners = null;
-    static float roomPosX = 0;
-    static float roomPosY = 0;
+    int mapId = 0;
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
     ArrayList<String> listMap = new ArrayList<String>();
@@ -81,7 +77,6 @@ public class MapTrackingFragment extends Fragment {
     private static final String TAG = "MapTrackingFragment";
     CanvasMapView canvasMapView;
     View v;
-    Button btnSearch;
     private static final int REQUEST_CODE_ROOM = 0x9345;
     Fragment fragment;
     private String result = "";
@@ -99,40 +94,15 @@ public class MapTrackingFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-//        //create sensor manager
-//        SM = (SensorManager) context.getSystemService(SENSOR_SERVICE);
-//
-//        //accelerometer sensor
-//        mySensor = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-//
-//        //register sensor listener
-//        SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
         downloadManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
-        sharedPreference = getActivity().getSharedPreferences("ROOM_CORNER_INFO",getActivity().MODE_PRIVATE);
+        sharedPreference = getActivity().getSharedPreferences("ROOM_CORNER_INFO", getActivity().MODE_PRIVATE);
         editor = sharedPreference.edit();
         new GetListMap().execute();
-        /*do {
-
-        } while (!result.equals("Finish"));*/
         new CanvasAsyncTask(MapTrackingFragment.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-//        new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-//        new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
         this.getArguments();
-        getActivity();
         fragment = this;
         // Inflate the layout for this fragment
         v = inflater.inflate(R.layout.fragment_map, container, false);
-        btnSearch = v.findViewById(R.id.buttonSearch);
-        btnSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(getActivity(), MapSearchActivity.class);
-                startActivityForResult(i, REQUEST_CODE_ROOM);
-            }
-        });
-        //assign text view
-//        accelLast = SM.GRAVITY_EARTH;
-//        accelCurrent = SM.GRAVITY_EARTH;
         return v;
     }
 
@@ -140,35 +110,6 @@ public class MapTrackingFragment extends Fragment {
     public void onResume() {
         super.onResume();
         ((HomeActivity) getActivity()).setActionBarTitle(getString(R.string.ACTION_BAR_TITLE_MAPS));
-    }
-
-   /* @Override
-    public void onClick(View view) {
-        switch (view.getId()){
-            case R.id.buttonSearch:
-
-                break;
-        }
-
-    }*/
-
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode==REQUEST_CODE_ROOM)
-        {
-            if(resultCode == 1){
-                //Draw a room point
-                data.getIntExtra("PosAX",0);
-                roomPosX = Utils.getPixel(width / 12, data.getIntExtra("PosAX", 0)  , data.getIntExtra("PosBX",0));
-                roomPosY = Utils.getPixel(width / 12, data.getIntExtra("PosAY", 0) , data.getIntExtra("PosBY",0) );
-
-            }
-            if (resultCode == 0) {
-                //Write your code if there's no result
-            }
-        }
     }
 
     @Override
@@ -181,58 +122,18 @@ public class MapTrackingFragment extends Fragment {
             @Override
             public void onRefresh() {
                 final FragmentManager mng = getActivity().getSupportFragmentManager();
-                swipeRefreshLayout.setColorSchemeResources(R.color.Refresh1,R.color.Refresh2,R.color.Refresh3,R.color.Refresh4);
                 swipeRefreshLayout.setRefreshing(true);
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         swipeRefreshLayout.setRefreshing(false);
-                        mng.beginTransaction().replace(R.id.content_main,new MapTrackingFragment()).commit();
+                        canvasMapView.invalidate();
                     }
-                },1000);
+                }, 1000);
             }
         });
     }
 
-//    @Override
-//    public void onSensorChanged(SensorEvent sensorEvent) {
-//        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-//            values = sensorEvent.values.clone();
-//            x = values[0];
-//            y = values[1];
-//            z = values[2];
-//            accelLast = accelCurrent;
-//            accelCurrent = (float) Math.sqrt(x * x + y * y + z * z);
-//            float delta = accelCurrent - accelLast;
-//            accel = accel * 0.9f + delta;
-//            // Make this higher or lower according to how much
-//            // motion you want to detect
-//            CanvasMapView canvasMapView = this.getView().findViewById(R.id.viewCanvas);
-//            if (accel > 1) {
-//                isMoving = "Moving";
-//                if (gps.canGetLocation()) {
-////                    latitude = gps.getLatitude();
-////                    longitude = gps.getLongitude();
-//                    latitude = 10.8530062;
-//                    longitude = 106.6296201;
-//                } else {
-//                    gps.showSettingAlert();
-//                }
-//                getCurrentPointMap();
-//                Log.e(TAG, "onSensorChanged: moving");
-//                canvasMapView.invalidate();
-//            } else {
-////                canvasMapView.invalidate();
-////                isMoving = "still";
-//            }
-//            Log.e(TAG, "onSensorChanged: still");
-//        }
-//    }
-
-//    @Override
-//    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-//
-//    }
 
     //create View with Canvas for map
     private class CanvasMapView extends View {
@@ -256,21 +157,12 @@ public class MapTrackingFragment extends Fragment {
             width = getWidth();
 
             //get location from GPSRouter class
-            Context context = this.getContext();
-//            gps = new GPSRouter(context);
-//            Bundle bundle = fragment.getArguments();
-//            if (bundle == null) {
-                latitude = sharedData.LAT;
-                longitude = sharedData.LONG;
-                altitude = sharedData.ALT;
-//          } else {
-//                latitude = bundle.getDouble("LAT");
-//                longitude = bundle.getDouble("LONG");
-//                altitude = bundle.getDouble("ALT");
-//            }
+            latitude = sharedData.LAT;
+            longitude = sharedData.LONG;
+            altitude = sharedData.ALT;
 
             String filename = "floor1";
-            Bitmap map ;
+            Bitmap map;
             Bitmap scaleMap;
             //get location from GPSRouter class
             for (int i = 0; i < listMap.size(); i++) {
@@ -282,35 +174,36 @@ public class MapTrackingFragment extends Fragment {
                         altitudeMap2 = new JSONObject(listMap.get(i + 1)).getDouble("Altitude");
                         if (altitude == 0.0) {
                             filename = "floor1";
+                            mapId = 1;
                             break;
                         } else if (altitudeMap1 <= altitude && altitude < altitudeMap2) {
                             filename = nameMap;
-                            currentFloor = filename.substring(filename.length()-1);
-                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR",""))){
-                                String roomJson = sharedPreference.getString("ROOMLIST",null);
-                                String cornerJson = sharedPreference.getString("CORNERLIST",null);
+                            mapId = new JSONObject(listMap.get(i)).getInt("Id");
+                            currentFloor = filename.substring(filename.length() - 1);
+                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR", ""))) {
+                                String roomJson = sharedPreference.getString("ROOMLIST", null);
+                                String cornerJson = sharedPreference.getString("CORNERLIST", null);
                                 convertToCornerArray(cornerJson);
                                 convertToRoomArray(roomJson);
-                            }else{
-                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-                                editor.putString("LASTFLOOR",currentFloor).apply();
+                            } else {
+                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
+                                editor.putString("LASTFLOOR", currentFloor).apply();
                             }
                             break;
                         }
                     } else {
                         if (altitudeMap1 <= altitude) {
                             filename = nameMap;
-                            currentFloor = filename.substring(filename.length()-1);
-                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR",""))){
-                                String roomJson = sharedPreference.getString("ROOMLIST",null);
-                                String cornerJson = sharedPreference.getString("CORNERLIST",null);
+                            mapId = new JSONObject(listMap.get(i)).getInt("Id");
+                            currentFloor = filename.substring(filename.length() - 1);
+                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR", ""))) {
+                                String roomJson = sharedPreference.getString("ROOMLIST", null);
+                                String cornerJson = sharedPreference.getString("CORNERLIST", null);
                                 convertToCornerArray(cornerJson);
                                 convertToRoomArray(roomJson);
-                            }else{
-                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-                                editor.putString("LASTFLOOR",currentFloor).apply();
+                            } else {
+                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
+                                editor.putString("LASTFLOOR", currentFloor).apply();
                             }
                             break;
                         }
@@ -320,11 +213,9 @@ public class MapTrackingFragment extends Fragment {
                     e.printStackTrace();
                 }
             }
-//            if (first) {
-//                first = false;
-//                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1, 1);
-//                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-//            }
+            if (first) {
+                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
+            }
             String path = sharedData.storage + filename + ".png";
             final File temp = new File(sharedData.storage + filename + ".png");
 
@@ -334,30 +225,16 @@ public class MapTrackingFragment extends Fragment {
             scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
             if (first == false) {
-
-//                if (bundle != null) {
-//                    deviceLat = bundle.getDouble("LAT");
-//                    deviceLong = bundle.getDouble("LONG");
-//                }
                 getPointMap(latitude, longitude, false);
-//                if (deviceLat != 0 || deviceLong != 0) {
-//                    getPointMap(deviceLat, deviceLong, true);
-//                }
                 if (posX != 0 || posY != 0) {
                     mPaint.setColor(Color.BLUE);
                     canvas.drawCircle(posX, posY, 10, mPaint);
                 }
-                if (devicePosX != 0 || devicePosY != 0) {
-                    mPaint.setColor(Color.GREEN);
-                    canvas.drawCircle(devicePosX, devicePosY, 10, mPaint);
+            }
+            if (corners != null) {
+                if (corners.length == 4) {
+                    first = false;
                 }
-            }
-            if(roomPosX !=0 || roomPosY !=0){
-                mPaint.setColor(Color.RED);
-                canvas.drawCircle(roomPosX , roomPosY,10, mPaint);
-            }
-            if (corners != null && corners.length == 4) {
-                first = false;
             }
 
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +
@@ -378,26 +255,28 @@ public class MapTrackingFragment extends Fragment {
         int corner = 1;
         double min = Utils.PerpendicularDistance(corners[0], corners[1], longitude, latitude);
         double perpendicular = Utils.PerpendicularDistance(corners[1], corners[2], longitude, latitude);
-        if (min > perpendicular) {
+        if (perpendicular <= min) {
             min = perpendicular;
             corner = 2;
         }
         perpendicular = Utils.PerpendicularDistance(corners[2], corners[3], longitude, latitude);
-        if (perpendicular < min) {
+        if (perpendicular <= min) {
             min = perpendicular;
             corner = 3;
         }
         perpendicular = Utils.PerpendicularDistance(corners[3], corners[0], longitude, latitude);
-        if (perpendicular < min) {
+        if (perpendicular <= min) {
             min = perpendicular;
             corner = 4;
         }
-
-        Corner currentCorner1 = corners[1];
-        Corner currentCorner2 = corners[0];
+        Log.e("perpendicular: ", min + "");
+        float checkX = 0;
+        float checkY = 0;
         if (isDevice) {
             if (corner == 1) {
                 //29  18
+                Corner currentCorner1 = corners[1];
+                Corner currentCorner2 = corners[0];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -408,10 +287,9 @@ public class MapTrackingFragment extends Fragment {
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
                 double x = min + 3;
                 devicePosX = (float) (width / distanceCorner * x);
-//                posX = width / 18 * ((float) (rooms[0].getWidth()));
             } else if (corner == 3) {
-                currentCorner1 = corners[2];
-                currentCorner2 = corners[3];
+                Corner currentCorner1 = corners[2];
+                Corner currentCorner2 = corners[3];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -423,8 +301,8 @@ public class MapTrackingFragment extends Fragment {
                 double x = distanceCorner - (min + 3);
                 devicePosX = (float) (width / distanceCorner * x);
             } else if (corner == 2) {
-                currentCorner1 = corners[2];
-                currentCorner2 = corners[1];
+                Corner currentCorner1 = corners[2];
+                Corner currentCorner2 = corners[1];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -435,8 +313,8 @@ public class MapTrackingFragment extends Fragment {
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
                 devicePosX = (float) (width / distanceCorner * min);
             } else if (corner == 4) {
-                currentCorner1 = corners[3];
-                currentCorner2 = corners[0];
+                Corner currentCorner1 = corners[3];
+                Corner currentCorner2 = corners[0];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
@@ -448,104 +326,68 @@ public class MapTrackingFragment extends Fragment {
                 devicePosX = (float) (width / distanceCorner * min);
             }
         } else {
+            Log.d("Corner:", corner + "");
             if (corner == 1) {
                 //29  18
+                Corner currentCorner1 = corners[1];
+                Corner currentCorner2 = corners[0];
                 double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double temp = Utils.getPixelWithPer(min, distance2);
-                posY = (float) (height / distanceCorner * temp);
+                checkY = (float) (height / distanceCorner * temp);
                 currentCorner2 = corners[2];
                 distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
-                double x = min + 3;
-                posX = (float) (width / distanceCorner * x);
-//                posX = width / 18 * ((float) (rooms[0].getWidth()));
+                checkX = (float) (width / distanceCorner * min);
             } else if (corner == 3) {
-                currentCorner1 = corners[2];
-                currentCorner2 = corners[3];
+                Corner currentCorner1 = corners[2];
+                Corner currentCorner2 = corners[3];
                 double distance2 = (float) Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double temp = Utils.getPixelWithPer(min, distance2);
-                posY = (float) (height / distanceCorner * temp);
+                checkY = (float) (height / distanceCorner * temp);
                 currentCorner2 = corners[1];
                 distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
-                double x = distanceCorner - (min + 3);
-                posX = (float) (width / distanceCorner * x);
+                double x = distanceCorner - (min);
+                checkX = (float) (width / distanceCorner * x);
             } else if (corner == 2) {
-                currentCorner1 = corners[2];
-                currentCorner2 = corners[1];
-                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
-                double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
-                        currentCorner1.getLatitude(), currentCorner1.getLongitude());
-                double temp = Utils.getPixelWithPer(min, distance2) + 3;
-                posY = (float) (height / distanceCorner * temp);
-                currentCorner2 = corners[3];
-                distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
-                        currentCorner2.getLatitude(), currentCorner2.getLongitude());
-                posX = (float) (width / distanceCorner * min);
-            } else if (corner == 4) {
-                currentCorner1 = corners[3];
-                currentCorner2 = corners[0];
-                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                Corner currentCorner1 = corners[2];
+                Corner currentCorner2 = corners[1];
+                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner2.getLatitude(), currentCorner2.getLongitude());
                 double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
                         currentCorner1.getLatitude(), currentCorner1.getLongitude());
                 double temp = Utils.getPixelWithPer(min, distance2);
-                posY = (float) (height / distanceCorner * temp) + 3;
+                checkX = (float) (width / distanceCorner * temp);
+                currentCorner1 = corners[0];
+                distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
+                        currentCorner2.getLatitude(), currentCorner2.getLongitude());
+                checkY = (float) (height / distanceCorner * min);
+            } else if (corner == 4) {
+                Corner currentCorner1 = corners[3];
+                Corner currentCorner2 = corners[0];
+                double distance2 = Utils.HaversineInM(latitude, longitude, currentCorner2.getLatitude(), currentCorner2.getLongitude());
+                double distanceCorner = Utils.HaversineInM(currentCorner2.getLatitude(), currentCorner2.getLongitude(),
+                        currentCorner1.getLatitude(), currentCorner1.getLongitude());
+                double temp = Utils.getPixelWithPer(min, distance2);
+                checkX = (float) (width / distanceCorner * temp);
                 currentCorner2 = corners[2];
                 distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
                         currentCorner2.getLatitude(), currentCorner2.getLongitude());
-                posX = (float) (width / distanceCorner * min);
+                double x = distanceCorner - min;
+                checkY = (float) (height / distanceCorner * x);
+            }
+
+            if ((checkX <= width && checkX >= 0) && (checkY <= height && checkY >= 0)) {
+                posX = checkX;
+                posY = checkY;
             }
         }
     }
 
 
-    public class initListRoom extends AsyncTask {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected void onPostExecute(Object o) {
-            super.onPostExecute(o);
-        }
-
-        @Override
-        protected Object doInBackground(Object[] objects) {
-            try {
-                int mapId = Integer.parseInt(objects[0].toString());
-                int floor = Integer.parseInt(objects[1].toString());
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/GetListRoom?floor=" + floor + "&mapId=" + mapId);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                int responseCode = connection.getResponseCode();
-                if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    StringBuilder responseOutput = new StringBuilder();
-                    String line = "";
-                    while ((line = br.readLine()) != null) {
-                        responseOutput.append(line);
-                    }
-                    br.close();
-                    String json = responseOutput.toString();
-                    editor.putString("ROOMLIST",json).apply();
-                    convertToRoomArray(json);
-                }
-            } catch (MalformedURLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
 
     public class initListCorner extends AsyncTask {
 
@@ -567,7 +409,7 @@ public class MapTrackingFragment extends Fragment {
                     }
                     br.close();
                     String json = responseOutput.toString();
-                    editor.putString("CORNERLIST",json).apply();
+                    editor.putString("CORNERLIST", json).apply();
                     convertToCornerArray(json);
                 }
             } catch (MalformedURLException e) {
@@ -709,7 +551,7 @@ public class MapTrackingFragment extends Fragment {
         Long reference = downloadManager.enqueue(request);
     }
 
-    public void convertToRoomArray(String json){
+    public void convertToRoomArray(String json) {
         try {
             JSONArray list = new JSONArray(json);
             int total = list.length();
@@ -729,7 +571,7 @@ public class MapTrackingFragment extends Fragment {
         }
     }
 
-    public void convertToCornerArray(String json){
+    public void convertToCornerArray(String json) {
         try {
             JSONArray list = new JSONArray(json);
             int total = list.length();

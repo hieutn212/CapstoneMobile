@@ -21,7 +21,7 @@ public class PositionService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         while (true) {
             try{
-                Thread.sleep(30000);
+                Thread.sleep(10000);
                 new CreatePosition(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
             catch (InterruptedException e) {

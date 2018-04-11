@@ -18,6 +18,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -58,7 +59,6 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
         txtUsername = findViewById(R.id.input_username);
         txtPassword = findViewById(R.id.input_password);
         //check state permission
@@ -100,6 +100,10 @@ public class LoginActivity extends AppCompatActivity {
                 LoginCheck();
             }
         });
+
+        Display display = getWindowManager().getDefaultDisplay();
+        sharedData.width = display.getWidth();
+        sharedData.height = display.getHeight() - 240;
 
         new CreatePosition(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         Intent intent = new Intent(this, PositionService.class);
@@ -164,8 +168,9 @@ public class LoginActivity extends AppCompatActivity {
     }*/
 
     public class CheckLogin extends AsyncTask<String, Void, String> {
-        int responseCode ;
+        int responseCode;
         StringBuilder responseOutput;
+
         @Override
         protected void onPreExecute() {
 
@@ -177,7 +182,7 @@ public class LoginActivity extends AppCompatActivity {
         protected String doInBackground(String... strings) {
             try {
                 URL url = new URL("http://" + sharedData.IP + ":57305/api/User/Get?username=" + username + "&password=" + password);
-                Log.e(TAG, "doInBackground: Login url" +sharedData.IP );
+                Log.e(TAG, "doInBackground: Login url" + sharedData.IP);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 responseCode = connection.getResponseCode();
@@ -215,7 +220,7 @@ public class LoginActivity extends AppCompatActivity {
                     startActivity(intent);
                     //prevent going back by press back button
                     finish();
-                }else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
                     Toast.makeText(LoginActivity.this, "Tên hoặc mật khẩu không đúng", Toast.LENGTH_SHORT).show();
                 }
             } catch (JSONException e) {
