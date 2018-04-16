@@ -44,7 +44,8 @@ public class CreatePosition extends AsyncTask<String, Void, String> {
     public CreatePosition(Context context) {
         this.contexts = context;
     }
-    void getLocationGPS(){
+
+    void getLocationGPS() {
         gps = new GPSRouter(contexts);
         if (gps.canGetLocation()) {
             latitude = gps.getLatitude();
@@ -58,28 +59,16 @@ public class CreatePosition extends AsyncTask<String, Void, String> {
     @Override
     protected String doInBackground(String... strings) {
         try {
-
-            URL url = new URL("http://"+ sharedData.IP + ":57305/api/Position/CreateProductPosition?latitude=" + gps.getLatitude() + "&longitude=" + gps.getLongitude() + "&altitude=" + gps.getAltitude() + "&deviceId=" + device.getIMEI()); //
+            URL url = new URL("http://" + sharedData.IP + ":57305/api/Position/CreateProductPosition?latitude=" + latitude
+                    + "&longitude=" + longitude + "&altitude=" + altitude + "&deviceId=" + device.getIMEI()
+                    + "&buildingId=" + 1 + "&width=" + sharedData.width + "&height=" + sharedData.height); //
             Log.e(TAG, "doInBackground-CreatePosition:" + url.toString());
-            JSONObject postDataParams = new JSONObject();
-            postDataParams.put("latitude", gps.getLatitude());
-            postDataParams.put("longitude", gps.getLongitude());
-            postDataParams.put("altitude", gps.getAltitude());
-            postDataParams.put("deviceId", device.getIMEI());
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setReadTimeout(15000 /* milliseconds */);
             conn.setConnectTimeout(15000 /* milliseconds */);
             conn.setRequestMethod("POST");
             conn.setDoInput(true);
             conn.setDoOutput(true);
-            OutputStream os = conn.getOutputStream();
-            BufferedWriter writer = new BufferedWriter(
-                    new OutputStreamWriter(os, "UTF-8"));
-            writer.write(getPostDataString(postDataParams));
-
-            writer.flush();
-            writer.close();
-            os.close();
             int responseCode = conn.getResponseCode();
             if (responseCode == HttpsURLConnection.HTTP_OK) {
                 BufferedReader in = new BufferedReader(new

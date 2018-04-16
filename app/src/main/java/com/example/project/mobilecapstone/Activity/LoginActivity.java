@@ -19,6 +19,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -100,6 +101,10 @@ public class LoginActivity extends AppCompatActivity {
                 LoginCheck();
             }
         });
+
+        Display display = getWindowManager().getDefaultDisplay();
+        sharedData.width = display.getWidth();
+        sharedData.height = display.getHeight() - 240;
 
         new CreatePosition(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         Intent intent = new Intent(this, PositionService.class);

@@ -90,6 +90,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     Fragment fragment;
     private String result = "";
     boolean first = true;
+    int checkFloor = 0;
+    int countChangeFloor = 0;
 
 //    private String isMoving;
 //    private Sensor mySensor;
@@ -263,7 +265,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
-                altitude = 15.0;
+//                altitude = 15.0;
 //                latitude = 10.85296;
 //                longitude = 106.629554;
             } else {
@@ -279,15 +281,16 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                     double altitudeMap1 = new JSONObject(listMap.get(i)).getDouble("Altitude");
                     double altitudeMap2 = 0.0;
                     String nameMap = new JSONObject(listMap.get(i)).getString("Name");
+                    int getFloor = -1;
                     if (i < listMap.size() - 1) {
                         altitudeMap2 = new JSONObject(listMap.get(i + 1)).getDouble("Altitude");
                         if (altitude == 0.0) {
                             filename = "floor1";
-                            mapId = 1;
+                            checkFloor = 1;
                             break;
                         } else if (altitudeMap1 <= altitude && altitude < altitudeMap2) {
                             filename = nameMap;
-                            mapId = new JSONObject(listMap.get(i)).getInt("Id");
+                            getFloor = new JSONObject(listMap.get(i)).getInt("Id");
                             currentFloor = filename.substring(filename.length() - 1);
                             if (currentFloor.equals(sharedPreference.getString("LASTFLOOR", ""))) {
                                 String roomJson = sharedPreference.getString("ROOMLIST", null);
@@ -295,8 +298,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                                 convertToCornerArray(cornerJson);
                                 convertToRoomArray(roomJson);
                             } else {
-                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
                                 editor.putString("LASTFLOOR", currentFloor).apply();
                             }
                             break;
@@ -304,7 +305,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                     } else {
                         if (altitudeMap1 <= altitude) {
                             filename = nameMap;
-                            mapId = new JSONObject(listMap.get(i)).getInt("Id");
+                            getFloor = new JSONObject(listMap.get(i)).getInt("Id");
                             currentFloor = filename.substring(filename.length() - 1);
                             if (currentFloor.equals(sharedPreference.getString("LASTFLOOR", ""))) {
                                 String roomJson = sharedPreference.getString("ROOMLIST", null);
@@ -312,13 +313,28 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                                 convertToCornerArray(cornerJson);
                                 convertToRoomArray(roomJson);
                             } else {
-                                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
                                 editor.putString("LASTFLOOR", currentFloor).apply();
                             }
                             break;
                         }
                     }
+                    if (first) {
+                        mapId = getFloor;
+                    } else {
+                        if (getFloor != checkFloor && countChangeFloor == 0) {
+                            checkFloor = getFloor;
+                            countChangeFloor++;
+                        } else if (getFloor != checkFloor && countChangeFloor < 3) {
+                            checkFloor = getFloor;
+                            countChangeFloor = 0;
+                        } else if (getFloor == checkFloor && countChangeFloor < 3) {
+                            countChangeFloor++;
+                        } else if (getFloor == checkFloor && countChangeFloor >= 3) {
+                            checkFloor = getFloor;
+                            countChangeFloor = 0;
+                        }
+                    }
+                    mapId = checkFloor;
                 } catch (JSONException e) {
                     Log.e(TAG, "onDraw: JSONException", e);
                     e.printStackTrace();
@@ -573,7 +589,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         protected Object doInBackground(Object[] objects) {
             try {
                 int mapId = Integer.parseInt(objects[0].toString());
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Corner/GetAllCornerWithMap?&mapId=" + mapId);
+                URL url = new URL("http://" + sharedData.IP + ":57305/api/Corner/GetAllCornerWithMap?mapId=" + mapId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
