@@ -61,14 +61,13 @@ public class MapSearchActivity extends AppCompatActivity {
         searchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
             @Override
             public void onSearchViewShown() {
-
             }
 
             @Override
             public void onSearchViewClosed() {
                 //If closed Search View , lstView will return default
                 lstView = (ListView)findViewById(R.id.lstView);
-                ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this,android.R.layout.simple_list_item_1,lstSource);
+                ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this,android.R.layout.simple_list_item_1,lstName);
                 lstView.setAdapter(adapter);
             }
         });
@@ -124,7 +123,7 @@ public class MapSearchActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(String... strings) {
             try {
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/searchRoom?name=" + roomName + "&buildingId=" + buildingId);
+                URL url = new URL("http://" + sharedData.IP + "/api/Room/searchRoom?name=" + roomName + "&buildingId=" + buildingId);
 
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
@@ -158,13 +157,12 @@ public class MapSearchActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-
         }
 
         @Override
         protected String doInBackground(String... strings) {
             try {
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/GetListRoom?buildingId=" + buildingId);
+                URL url = new URL("http://" + sharedData.IP + "/api/Room/GetListRoom?buildingId=" + buildingId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
@@ -199,10 +197,8 @@ public class MapSearchActivity extends AppCompatActivity {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         Intent intent = new Intent();
-                        intent.putExtra("PosAX", lstSource[position].getPosAX());
-                        intent.putExtra("PosAY", lstSource[position].getPosAY());
-                        intent.putExtra("PosBX", lstSource[position].getPosBX());
-                        intent.putExtra("PosBY", lstSource[position].getPosBY());
+                        intent.putExtra("Lat", lstSource[position].getLatitude());
+                        intent.putExtra("Long", lstSource[position].getLongitude());
                         setResult(1, intent);
                         MapSearchActivity.this.finish();
                     /*new getRoom().execute();*/
@@ -221,9 +217,7 @@ public class MapSearchActivity extends AppCompatActivity {
                 Room newRoom = new Room(jsonObject.getInt("Id"), jsonObject.getString("Name"),
                         jsonObject.getInt("Floor"), jsonObject.getDouble("Length"),
                         jsonObject.getDouble("Width"), jsonObject.getInt("MapId"),
-                        jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"),
-                        jsonObject.getInt("PosAX"), jsonObject.getInt("PosAY"),
-                        jsonObject.getInt("PosBX"), jsonObject.getInt("PosBY"));
+                        jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"));
                 lstSource[i] = newRoom;
                 lstName[i] = jsonObject.getString("Name");
             }

@@ -13,15 +13,11 @@ public class Room {
     private int mapId;
     private double longitude;
     private double latitude;
-    private int posAX;
-    private int posAY;
-    private int posBX;
-    private int posBY;
 
     public Room() {
     }
 
-    public Room(int id, String name, int floor, double length, double width, int mapId, double longitude, double latitude, int posAX, int posAY, int posBX, int posBY) {
+    public Room(int id, String name, int floor, double length, double width, int mapId, double longitude, double latitude) {
         this.id = id;
         this.name = name;
         this.floor = floor;
@@ -30,10 +26,6 @@ public class Room {
         this.mapId = mapId;
         this.longitude = longitude;
         this.latitude = latitude;
-        this.posAX = posAX;
-        this.posAY = posAY;
-        this.posBX = posBX;
-        this.posBY = posBY;
     }
 
     public int getId() {
@@ -98,37 +90,5 @@ public class Room {
 
     public void setLatitude(double latitude) {
         this.latitude = latitude;
-    }
-
-    public int getPosAX() {
-        return posAX;
-    }
-
-    public void setPosAX(int posAX) {
-        this.posAX = posAX;
-    }
-
-    public int getPosAY() {
-        return posAY;
-    }
-
-    public void setPosAY(int posAY) {
-        this.posAY = posAY;
-    }
-
-    public int getPosBX() {
-        return posBX;
-    }
-
-    public void setPosBX(int posBX) {
-        this.posBX = posBX;
-    }
-
-    public int getPosBY() {
-        return posBY;
-    }
-
-    public void setPosBY(int posBY) {
-        this.posBY = posBY;
     }
 }

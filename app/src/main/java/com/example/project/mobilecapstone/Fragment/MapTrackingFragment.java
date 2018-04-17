@@ -396,7 +396,7 @@ public class MapTrackingFragment extends Fragment {
         protected Object doInBackground(Object[] objects) {
             try {
                 int mapId = Integer.parseInt(objects[0].toString());
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Corner/GetAllCornerWithMap?&mapId=" + mapId);
+                URL url = new URL("http://" + sharedData.IP + "/api/Corner/GetAllCornerWithMap?&mapId=" + mapId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
@@ -475,7 +475,7 @@ public class MapTrackingFragment extends Fragment {
         @Override
         protected String doInBackground(String... strings) {
             try {
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Map/GetListMap?buildingId=" + buildingId);
+                URL url = new URL("http://" + sharedData.IP + "/api/Map/GetListMap?buildingId=" + buildingId);
                 Log.e(TAG, "doInBackground: GetListMap" + sharedData.IP);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
@@ -496,7 +496,7 @@ public class MapTrackingFragment extends Fragment {
                         dir.mkdir();
                     }
                     for (int i = 0; i < listMap.size(); i++) {
-                        String urlMap = "http://" + sharedData.IP + ":57305/" + new JSONObject(listMap.get(i)).getString("MapUrl");
+                        String urlMap = "http://" + sharedData.IP + "/" + new JSONObject(listMap.get(i)).getString("MapUrl");
                         String nameMap = new JSONObject(listMap.get(i)).getString("Name");
 
                         //log 4 test
@@ -561,9 +561,7 @@ public class MapTrackingFragment extends Fragment {
                 Room newRoom = new Room(jsonObject.getInt("Id"), jsonObject.getString("Name"),
                         jsonObject.getInt("Floor"), jsonObject.getDouble("Length"),
                         jsonObject.getDouble("Width"), jsonObject.getInt("MapId"),
-                        jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"),
-                        jsonObject.getInt("PosAX"), jsonObject.getInt("PosAY"),
-                        jsonObject.getInt("PosBX"), jsonObject.getInt("PosBY"));
+                        jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"));
                 rooms[i] = newRoom;
             }
         } catch (JSONException e) {

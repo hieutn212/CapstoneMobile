@@ -209,7 +209,7 @@ public class TrackingFragment extends Fragment {
         protected String doInBackground(String... arg0) {
 
             try {
-                URL url = new URL("http://" + sharedData.IP +":57305/api/device/CreateProduct?IMEI=" + IMEI + "&name=" + name + "&userId=" + userId); // here is your URL path
+                URL url = new URL("http://" + sharedData.IP +"/api/device/CreateProduct?IMEI=" + IMEI + "&name=" + name + "&userId=" + userId); // here is your URL path
                 Log.e(TAG, "doInBackground-CreateProduct:" + url.toString());
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setReadTimeout(15000 /* milliseconds */);
@@ -261,7 +261,7 @@ public class TrackingFragment extends Fragment {
         @Override
         protected Void doInBackground(String... params) {
             try {
-                URL url = new URL("http://" + sharedData.IP +":57305/api/device/getListProduct?userId=" + userId);
+                URL url = new URL("http://" + sharedData.IP +"/api/device/getListProduct?userId=" + userId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
@@ -319,7 +319,7 @@ public class TrackingFragment extends Fragment {
         @Override
         protected String doInBackground(String... params) {
             try {
-                URL url = new URL("http://"+ sharedData.IP +":57305/api/Position/trackingProduct?deviceId=" + params[0]);
+                URL url = new URL("http://"+ sharedData.IP +"/api/Position/trackingProduct?deviceId=" + params[0]);
 
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
