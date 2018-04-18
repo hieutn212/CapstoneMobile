@@ -3,7 +3,6 @@ package com.example.project.mobilecapstone.Fragment;
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,7 +23,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -32,9 +30,7 @@ import com.example.project.mobilecapstone.Activity.HomeActivity;
 import com.example.project.mobilecapstone.Data.Corner;
 import com.example.project.mobilecapstone.Data.Room;
 import com.example.project.mobilecapstone.Data.sharedData;
-import com.example.project.mobilecapstone.MapSearchActivity;
 import com.example.project.mobilecapstone.R;
-import com.example.project.mobilecapstone.Utils.GPSRouter;
 import com.example.project.mobilecapstone.Utils.Utils;
 
 import org.json.JSONArray;
@@ -386,7 +382,6 @@ public class MapTrackingFragment extends Fragment {
             }
         }
     }
-
 
 
     public class initListCorner extends AsyncTask {

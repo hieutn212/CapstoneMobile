@@ -43,12 +43,13 @@ public class MapSearchActivity extends AppCompatActivity {
     Room[] lstSource = null;
     String[] lstName = null;
     private static final String TAG = "MapSearchActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_search);
 
-        Toolbar toolbar = (Toolbar)findViewById(R.id.SearchToolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.SearchToolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Search your Room ");
         toolbar.setTitleTextColor(Color.parseColor("#FFFFFF"));
@@ -57,7 +58,7 @@ public class MapSearchActivity extends AppCompatActivity {
         new getRoomList().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
 
-        searchView = (MaterialSearchView)findViewById(R.id.search_view);
+        searchView = (MaterialSearchView) findViewById(R.id.search_view);
         searchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
             @Override
             public void onSearchViewShown() {
@@ -66,8 +67,8 @@ public class MapSearchActivity extends AppCompatActivity {
             @Override
             public void onSearchViewClosed() {
                 //If closed Search View , lstView will return default
-                lstView = (ListView)findViewById(R.id.lstView);
-                ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this,android.R.layout.simple_list_item_1,lstName);
+                lstView = (ListView) findViewById(R.id.lstView);
+                ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this, android.R.layout.simple_list_item_1, lstName);
                 lstView.setAdapter(adapter);
             }
         });
@@ -84,20 +85,19 @@ public class MapSearchActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if(newText != null && !newText.isEmpty()){
+                if (newText != null && !newText.isEmpty()) {
                     List<Room> lstFound = new ArrayList();
-                    for(Room r:lstSource){
-                        if(r.getName().contains(newText))
+                    for (Room r : lstSource) {
+                        if (r.getName().contains(newText))
                             lstFound.add(r);
                     }
 
-                    ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this,android.R.layout.simple_list_item_1,lstFound);
+                    ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this, android.R.layout.simple_list_item_1, lstFound);
                     lstView.setAdapter(adapter);
-                }
-                else{
+                } else {
                     //if search text is null
                     //return default
-                    ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this,android.R.layout.simple_list_item_1,lstSource);
+                    ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this, android.R.layout.simple_list_item_1, lstSource);
                     lstView.setAdapter(adapter);
                 }
                 return true;
@@ -106,14 +106,14 @@ public class MapSearchActivity extends AppCompatActivity {
     }
 
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_search,menu);
+        getMenuInflater().inflate(R.menu.menu_search, menu);
         MenuItem item = menu.findItem(R.id.action_Search);
         searchView.setMenuItem(item);
         return true;
     }
+
     public class getRoom extends AsyncTask<String, Void, Void> {
         @Override
         protected void onPreExecute() {
@@ -150,7 +150,7 @@ public class MapSearchActivity extends AppCompatActivity {
         }
     }
 
-    public class getRoomList extends AsyncTask<String,Void,String>{
+    public class getRoomList extends AsyncTask<String, Void, String> {
 
         int buildingId = 1;
 
@@ -196,16 +196,18 @@ public class MapSearchActivity extends AppCompatActivity {
             lstView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        Intent intent = new Intent();
-                        intent.putExtra("Lat", lstSource[position].getLatitude());
-                        intent.putExtra("Long", lstSource[position].getLongitude());
-                        setResult(1, intent);
-                        MapSearchActivity.this.finish();
+                    Intent intent = new Intent();
+                    intent.putExtra("Floor", lstSource[position].getFloor());
+                    intent.putExtra("Width", lstSource[position].getWidth());
+                    intent.putExtra("Length", lstSource[position].getLength());
+                    setResult(1, intent);
+                    MapSearchActivity.this.finish();
                     /*new getRoom().execute();*/
                 }
             });
         }
     }
+
     public void convertToRoomArray(String json) {
         try {
             JSONArray list = new JSONArray(json);
