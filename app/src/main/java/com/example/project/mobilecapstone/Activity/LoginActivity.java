@@ -187,6 +187,7 @@ public class LoginActivity extends AppCompatActivity {
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 responseCode = connection.getResponseCode();
+                Log.e(TAG, "doInBackground: "+responseOutput );
                 final StringBuilder output = new StringBuilder("Request URL " + url);
                 output.append(System.getProperty("line.separator") + "Response Code " + responseCode);
                 output.append(System.getProperty("line.separator") + "Type " + "GET");
@@ -216,8 +217,9 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(LoginActivity.this, "Xin chào!", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                     intent.putExtra("Username", username);
-                    intent.putExtra("Fullname", new JSONObject(responseOutput.toString()).getString("Fullname"));
-                    intent.putExtra("Id", new JSONObject(responseOutput.toString()).getString("Id").toString());
+                    JSONObject obj = new JSONObject(responseOutput.toString());
+                    intent.putExtra("Fullname", obj.getString("Fullname"));
+                    intent.putExtra("Id", obj.getString("Id").toString());
                     startActivity(intent);
                     //prevent going back by press back button
                     finish();

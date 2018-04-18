@@ -110,7 +110,7 @@ public class RegisterActivity extends AppCompatActivity {
         protected String doInBackground(String... strings) {
             try {
 
-                URL url = new URL("http://" + sharedData.IP+":57305/api/User/CreateAccount?username="+username+"&password="+password+"&roleId=2&fullname="+fullname+"&birthday="+DoB+"&active=true"); //
+                URL url = new URL("http://" + sharedData.IP+"/api/User/CreateAccount?username="+username+"&password="+password+"&roleId=2&fullname="+fullname+"&birthday="+DoB+"&active=true"); //
                 Log.e(TAG, "doInBackground:" + url.toString());
                 JSONObject postDataParams = new JSONObject();
                 postDataParams.put("Username", username);

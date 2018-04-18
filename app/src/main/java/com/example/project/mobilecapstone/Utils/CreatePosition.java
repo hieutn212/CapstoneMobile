@@ -59,7 +59,7 @@ public class CreatePosition extends AsyncTask<String, Void, String> {
     @Override
     protected String doInBackground(String... strings) {
         try {
-            URL url = new URL("http://" + sharedData.IP + ":57305/api/Position/CreateProductPosition?latitude=" + latitude
+            URL url = new URL("http://" + sharedData.IP + "/api/Position/CreateProductPosition?latitude=" + latitude
                     + "&longitude=" + longitude + "&altitude=" + altitude + "&deviceId=" + device.getIMEI()
                     + "&buildingId=" + 1 + "&width=" + sharedData.width + "&height=" + sharedData.height); //
             Log.e(TAG, "doInBackground-CreatePosition:" + url.toString());

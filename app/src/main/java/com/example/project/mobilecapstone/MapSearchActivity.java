@@ -43,12 +43,13 @@ public class MapSearchActivity extends AppCompatActivity {
     Room[] lstSource = null;
     String[] lstName = null;
     private static final String TAG = "MapSearchActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_search);
 
-        Toolbar toolbar = (Toolbar)findViewById(R.id.SearchToolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.SearchToolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Search your Room ");
         toolbar.setTitleTextColor(Color.parseColor("#FFFFFF"));
@@ -57,18 +58,17 @@ public class MapSearchActivity extends AppCompatActivity {
         new getRoomList().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
 
-        searchView = (MaterialSearchView)findViewById(R.id.search_view);
+        searchView = (MaterialSearchView) findViewById(R.id.search_view);
         searchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
             @Override
             public void onSearchViewShown() {
-
             }
 
             @Override
             public void onSearchViewClosed() {
                 //If closed Search View , lstView will return default
-                lstView = (ListView)findViewById(R.id.lstView);
-                ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this,android.R.layout.simple_list_item_1,lstSource);
+                lstView = (ListView) findViewById(R.id.lstView);
+                ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this, android.R.layout.simple_list_item_1, lstName);
                 lstView.setAdapter(adapter);
             }
         });
@@ -85,20 +85,19 @@ public class MapSearchActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if(newText != null && !newText.isEmpty()){
+                if (newText != null && !newText.isEmpty()) {
                     List<Room> lstFound = new ArrayList();
-                    for(Room r:lstSource){
-                        if(r.getName().contains(newText))
+                    for (Room r : lstSource) {
+                        if (r.getName().contains(newText))
                             lstFound.add(r);
                     }
 
-                    ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this,android.R.layout.simple_list_item_1,lstFound);
+                    ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this, android.R.layout.simple_list_item_1, lstFound);
                     lstView.setAdapter(adapter);
-                }
-                else{
+                } else {
                     //if search text is null
                     //return default
-                    ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this,android.R.layout.simple_list_item_1,lstSource);
+                    ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this, android.R.layout.simple_list_item_1, lstSource);
                     lstView.setAdapter(adapter);
                 }
                 return true;
@@ -107,14 +106,14 @@ public class MapSearchActivity extends AppCompatActivity {
     }
 
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_search,menu);
+        getMenuInflater().inflate(R.menu.menu_search, menu);
         MenuItem item = menu.findItem(R.id.action_Search);
         searchView.setMenuItem(item);
         return true;
     }
+
     public class getRoom extends AsyncTask<String, Void, Void> {
         @Override
         protected void onPreExecute() {
@@ -124,7 +123,7 @@ public class MapSearchActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(String... strings) {
             try {
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/searchRoom?name=" + roomName + "&buildingId=" + buildingId);
+                URL url = new URL("http://" + sharedData.IP + "/api/Room/searchRoom?name=" + roomName + "&buildingId=" + buildingId);
 
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
@@ -150,20 +149,19 @@ public class MapSearchActivity extends AppCompatActivity {
         }
     }
 
-    public class getRoomList extends AsyncTask<String,Void,String>{
+    public class getRoomList extends AsyncTask<String, Void, String> {
 
         int buildingId = 1;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-
         }
 
         @Override
         protected String doInBackground(String... strings) {
             try {
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/GetListRoom?buildingId=" + buildingId);
+                URL url = new URL("http://" + sharedData.IP + "/api/Room/GetListRoom?buildingId=" + buildingId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
@@ -197,18 +195,18 @@ public class MapSearchActivity extends AppCompatActivity {
             lstView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        Intent intent = new Intent();
-                        intent.putExtra("PosAX", lstSource[position].getPosAX());
-                        intent.putExtra("PosAY", lstSource[position].getPosAY());
-                        intent.putExtra("PosBX", lstSource[position].getPosBX());
-                        intent.putExtra("PosBY", lstSource[position].getPosBY());
-                        setResult(1, intent);
-                        MapSearchActivity.this.finish();
+                    Intent intent = new Intent();
+                    intent.putExtra("Floor", lstSource[position].getFloor());
+                    intent.putExtra("Width", lstSource[position].getWidth());
+                    intent.putExtra("Length", lstSource[position].getLength());
+                    setResult(1, intent);
+                    MapSearchActivity.this.finish();
                     /*new getRoom().execute();*/
                 }
             });
         }
     }
+
     public void convertToRoomArray(String json) {
         try {
             JSONArray list = new JSONArray(json);
@@ -220,9 +218,7 @@ public class MapSearchActivity extends AppCompatActivity {
                 Room newRoom = new Room(jsonObject.getInt("Id"), jsonObject.getString("Name"),
                         jsonObject.getInt("Floor"), jsonObject.getDouble("Length"),
                         jsonObject.getDouble("Width"), jsonObject.getInt("MapId"),
-                        jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"),
-                        jsonObject.getInt("PosAX"), jsonObject.getInt("PosAY"),
-                        jsonObject.getInt("PosBX"), jsonObject.getInt("PosBY"));
+                        jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"));
                 lstSource[i] = newRoom;
                 lstName[i] = jsonObject.getString("Name");
             }

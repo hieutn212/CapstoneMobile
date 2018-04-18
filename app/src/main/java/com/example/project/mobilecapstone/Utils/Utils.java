@@ -10,11 +10,15 @@ public class Utils {
     private static double eQuatorialEarthRadius = 6371D;
     private static double d2r = (Math.PI / 180D);
 
-    public static float getPixel(int x, int a, int b) {
-        if (b == 0) {
-            return x * a;
-        }
-        return (x * a) + (x / b);
+//    public static float getPixel(int x, int a, int b) {
+//        if (b == 0) {
+//            return x * a;
+//        }
+//        return (x * a) + (x / b);
+//    }
+
+    public static float getPixel(float x, float y, float a) {
+        return (x * a) / y;
     }
 
     public static double HaversineInM(double lat1, double long1, double lat2, double long2) {

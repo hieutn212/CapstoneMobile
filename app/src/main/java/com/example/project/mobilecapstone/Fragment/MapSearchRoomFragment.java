@@ -1,7 +1,6 @@
 package com.example.project.mobilecapstone.Fragment;
 
 import android.annotation.SuppressLint;
-import android.app.Dialog;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -16,7 +15,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -25,10 +23,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.NumberPicker;
 import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Activity.HomeActivity;
@@ -54,16 +49,15 @@ import java.util.ArrayList;
 import javax.net.ssl.HttpsURLConnection;
 
 
-public class MapTrackingFragment extends Fragment {
+public class MapSearchRoomFragment extends Fragment {
     public boolean stopTask = false;
     static double latitude;
     static double longitude;
-    static double altitude;
     static float posX = 0;
     static float posY = 0;
     static float devicePosX = 0;
     static float devicePosY = 0;
-    private String currentFloor = "";
+    private int currentFloor = 0;
     public static Room[] rooms = null;
     public static Corner[] corners = null;
     int mapId = 0;
@@ -71,19 +65,15 @@ public class MapTrackingFragment extends Fragment {
     SharedPreferences.Editor editor;
     ArrayList<String> listMap = new ArrayList<String>();
     Integer buildingId;
-    private String TrackingId = "";
     private DownloadManager downloadManager;
     public SwipeRefreshLayout swipeRefreshLayout;
-    private FloatingActionButton fab;
-    private NumberPicker picker;
     static int width = 0;
     static int height = 0;
-    int time = 0;
     private static final String TAG = "MapTrackingFragment";
-    CanvasMapView canvasMapView;
+    MapSearchRoomFragment.CanvasMapView canvasMapView;
     View v;
     private static final int REQUEST_CODE_ROOM = 0x9345;
-    Fragment fragment;
+    android.support.v4.app.Fragment fragment;
     private String result = "";
 //    private String isMoving;
 //    private Sensor mySensor;
@@ -91,7 +81,8 @@ public class MapTrackingFragment extends Fragment {
 //    private float accelLast, accelCurrent, accel, x, y, z;
 //    private float[] values;
 
-    public MapTrackingFragment() {
+    public MapSearchRoomFragment() {
+
     }
 
     @Override
@@ -101,21 +92,19 @@ public class MapTrackingFragment extends Fragment {
         downloadManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
         sharedPreference = getActivity().getSharedPreferences("ROOM_CORNER_INFO", getActivity().MODE_PRIVATE);
         editor = sharedPreference.edit();
-        new GetListMap().execute();
-        new CanvasAsyncTask(MapTrackingFragment.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        this.getArguments();
+        new MapSearchRoomFragment.GetListMap().execute();
+        new MapSearchRoomFragment.CanvasAsyncTask(MapSearchRoomFragment.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        Bundle bundle = this.getArguments();
+        if (bundle != null) {
+            posX = bundle.getFloat("PosX");
+            posY = bundle.getFloat("PosY");
+            currentFloor = bundle.getInt("Floor");
+        }
         fragment = this;
         // Inflate the layout for this fragment
         v = inflater.inflate(R.layout.fragment_trackingmap, container, false);
-        /*setHasOptionsMenu(true);*/
         return v;
     }
-
-    /*@Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_device_path,menu);
-        super.onCreateOptionsMenu(menu, inflater);
-    }*/
 
     @Override
     public void onResume() {
@@ -143,33 +132,6 @@ public class MapTrackingFragment extends Fragment {
                 }, 1000);
             }
         });
-
-        fab = getView().findViewById(R.id.btn_track_path);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Dialog dialog = new Dialog(getContext());
-                dialog.setCancelable(true);
-                dialog.setContentView(R.layout.dialog_time_picker);
-                //window manager to set dialog attributes
-                WindowManager.LayoutParams params = new WindowManager.LayoutParams();
-                params.copyFrom(dialog.getWindow().getAttributes());
-                params.width = WindowManager.LayoutParams.MATCH_PARENT;
-                Button btn_set = dialog.findViewById(R.id.btnSetTime);
-                picker = dialog.findViewById(R.id.minutePicker);
-                picker.setMaxValue(15);
-                picker.setMinValue(2);
-                picker.setWrapSelectorWheel(false);
-                btn_set.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        time = picker.getValue();
-                        new getDevicePath().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                    }
-                });
-                dialog.show();
-            }
-        });
     }
 
 
@@ -194,10 +156,7 @@ public class MapTrackingFragment extends Fragment {
             height = getHeight();
             width = getWidth();
 
-            //get location from Tracking fragment
-            latitude = sharedData.LAT;
-            longitude = sharedData.LONG;
-            altitude = sharedData.ALT;
+            //get location from GPSRouter class
 
             String filename = "floor1";
             Bitmap map;
@@ -205,46 +164,21 @@ public class MapTrackingFragment extends Fragment {
             //get location from GPSRouter class
             for (int i = 0; i < listMap.size(); i++) {
                 try {
-                    double altitudeMap1 = new JSONObject(listMap.get(i)).getDouble("Altitude");
-                    double altitudeMap2 = 0.0;
-                    String nameMap = new JSONObject(listMap.get(i)).getString("Name");
-                    if (i < listMap.size() - 1) {
-                        altitudeMap2 = new JSONObject(listMap.get(i + 1)).getDouble("Altitude");
-                        if (altitude == 0.0) {
-                            filename = "floor1";
-                            mapId = 1;
-                            break;
-                        } else if (altitudeMap1 <= altitude && altitude < altitudeMap2) {
-                            filename = nameMap;
-                            mapId = new JSONObject(listMap.get(i)).getInt("Id");
-                            currentFloor = filename.substring(filename.length() - 1);
-                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR", ""))) {
-                                String roomJson = sharedPreference.getString("ROOMLIST", null);
-                                String cornerJson = sharedPreference.getString("CORNERLIST", null);
-                                convertToCornerArray(cornerJson);
-                                convertToRoomArray(roomJson);
-                            } else {
-                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
-                                editor.putString("LASTFLOOR", currentFloor).apply();
-                            }
-                            break;
+                    JSONObject object = new JSONObject(listMap.get(i));
+                    if (currentFloor == object.getInt("Floor")) {
+                        mapId = object.getInt("Id");
+                        String sharePreferenceString = sharedPreference.getString("LASTFLOOR", "");
+                        if (sharePreferenceString != "" && currentFloor == Integer.parseInt(sharedPreference.getString("LASTFLOOR", ""))) {
+                            String roomJson = sharedPreference.getString("ROOMLIST", null);
+                            String cornerJson = sharedPreference.getString("CORNERLIST", null);
+                            convertToCornerArray(cornerJson);
+                            convertToRoomArray(roomJson);
+                        } else {
+                            new MapSearchRoomFragment.initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
+                            editor.putString("LASTFLOOR", currentFloor + "").apply();
                         }
-                    } else {
-                        if (altitudeMap1 <= altitude) {
-                            filename = nameMap;
-                            mapId = new JSONObject(listMap.get(i)).getInt("Id");
-                            currentFloor = filename.substring(filename.length() - 1);
-                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR", ""))) {
-                                String roomJson = sharedPreference.getString("ROOMLIST", null);
-                                String cornerJson = sharedPreference.getString("CORNERLIST", null);
-                                convertToCornerArray(cornerJson);
-                                convertToRoomArray(roomJson);
-                            } else {
-                                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
-                                editor.putString("LASTFLOOR", currentFloor).apply();
-                            }
-                            break;
-                        }
+                        filename = object.getString("Name");
+                        break;
                     }
                 } catch (JSONException e) {
                     Log.e(TAG, "onDraw: JSONException", e);
@@ -252,7 +186,7 @@ public class MapTrackingFragment extends Fragment {
                 }
             }
             if (first) {
-                new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
+                new MapSearchRoomFragment.initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
             }
             String path = sharedData.storage + filename + ".png";
             final File temp = new File(sharedData.storage + filename + ".png");
@@ -263,7 +197,6 @@ public class MapTrackingFragment extends Fragment {
             scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
             if (first == false) {
-                getPointMap(latitude, longitude, false);
                 if (posX != 0 || posY != 0) {
                     mPaint.setColor(Color.BLUE);
                     canvas.drawCircle(posX, posY, 10, mPaint);
@@ -275,9 +208,6 @@ public class MapTrackingFragment extends Fragment {
                 }
             }
 
-            Toast.makeText(this.getContext(), "Your location is - \nLat: " +
-                            latitude + "\nLong: " + longitude,
-                    Toast.LENGTH_LONG).show();
         }
 
         private void initPaint() {
@@ -464,9 +394,9 @@ public class MapTrackingFragment extends Fragment {
 
     public class CanvasAsyncTask extends AsyncTask<Void, Double, Void> {
 
-        private MapTrackingFragment fragment;
+        private MapSearchRoomFragment fragment;
 
-        public CanvasAsyncTask(MapTrackingFragment fragment) {
+        public CanvasAsyncTask(MapSearchRoomFragment fragment) {
             this.fragment = fragment;
         }
 //        private Activity activity;
@@ -563,75 +493,10 @@ public class MapTrackingFragment extends Fragment {
         @Override
         protected void onPostExecute(String s) {
             FrameLayout layout = v.findViewById(R.id.canvasView);
-            canvasMapView = new CanvasMapView(getContext());
+            canvasMapView = new MapSearchRoomFragment.CanvasMapView(getContext());
             canvasMapView.setId(R.id.viewCanvas);
             layout.addView(canvasMapView);
             stopTask = false;
-        }
-    }
-
-    public class getDevicePath extends AsyncTask<String, Void, String> {
-        int total = 0;
-        int responseCode = 0;
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-        }
-
-        @Override
-        protected String doInBackground(String... strings) {
-            try {
-                URL url = new URL("http://" + sharedData.IP + "/api/Position/trackingProductWithTime?deviceId=" + sharedData.DeviceIMEI + "&timeSearch=" + time);
-                Log.e(TAG, "doInBackground: GetListMap" + sharedData.IP);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                responseCode = connection.getResponseCode();
-                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String line = "";
-                final StringBuilder responseOutput = new StringBuilder();
-                while ((line = br.readLine()) != null) {
-                    responseOutput.append(line);
-                }
-                //logging
-                Log.e(TAG, "doInBackground: getListMap" + responseOutput.toString());
-                br.close();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    String json = responseOutput.toString();
-                    JSONArray list = new JSONArray(json);
-                    total = list.length();
-                    if (total > 0) {
-                        for (int i = 0; i < total; i++) {
-                            JSONObject obj = new JSONObject(list.get(i).toString());
-                            latitude = obj.getDouble("Latitude");
-                            longitude = obj.getDouble("Longitude");
-                            altitude = obj.getDouble("Altitude");
-                            getPointMap(latitude, longitude, true);
-                            Canvas canvas = new Canvas();
-                            Paint mPaint = initPaint();
-                            canvas.drawCircle(posX, posY, 10, mPaint);
-                        }
-                    }
-                }
-            } catch (MalformedURLException e) {
-                Log.e(TAG, "doInBackground: GetListMap", e);
-            } catch (IOException e) {
-                Log.e(TAG, "doInBackground: GetListMap", e);
-            } catch (JSONException e) {
-                Log.e(TAG, "doInBackground: GetListMap", e);
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            if (responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
-                Toast.makeText(getActivity(), "Đã có lỗi xảy ra", Toast.LENGTH_SHORT).show();
-            }
-            if (total == 0) {
-                Toast.makeText(getActivity(), "Không có dữ liệu của thiết bị trong thời gian này !", Toast.LENGTH_SHORT).show();
-            }
         }
     }
 
@@ -687,15 +552,5 @@ public class MapTrackingFragment extends Fragment {
             Log.e(TAG, "doInBackground: CORNER", e);
             e.printStackTrace();
         }
-    }
-
-    private Paint initPaint() {
-        Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mPaint.setColor(Color.BLUE);
-        mPaint.setStrokeWidth(20);
-        mPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        mPaint.setStrokeCap(Paint.Cap.ROUND); // Cho dau cac duong ve duoc bo tron
-        mPaint.setAlpha(150);
-        return mPaint;
     }
 }
