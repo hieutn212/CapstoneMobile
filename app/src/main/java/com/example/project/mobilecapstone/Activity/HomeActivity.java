@@ -221,26 +221,30 @@ public class HomeActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            new AlertDialog.Builder(this).setTitle("Thoát ứng dụng").setMessage("Bạn có muốn thoát ứng dụng ?").setPositiveButton("Thoát", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    fragmentList = fm.getFragments();
-                    Fragment temp = fragmentList.get(fragmentList.size() - 1);
-                    if (temp.getClass().toString() == MapFragment.class.toString()) {
-                        MapFragment fragment = (MapFragment) temp;
-                        fragment.stopTask = true;
+            if (fm.getBackStackEntryCount() > 0){
+                fm.popBackStack();
+            }else{
+                new AlertDialog.Builder(this).setTitle("Thoát ứng dụng").setMessage("Bạn có muốn thoát ứng dụng ?").setPositiveButton("Thoát", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        fragmentList = fm.getFragments();
+                        Fragment temp = fragmentList.get(fragmentList.size() - 1);
+                        if (temp.getClass().toString() == MapFragment.class.toString()) {
+                            MapFragment fragment = (MapFragment) temp;
+                            fragment.stopTask = true;
+                        }
+                        Intent intent = new Intent(Intent.ACTION_MAIN);
+                        intent.addCategory(Intent.CATEGORY_HOME);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
                     }
-                    Intent intent = new Intent(Intent.ACTION_MAIN);
-                    intent.addCategory(Intent.CATEGORY_HOME);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                }
-            }).setNegativeButton("Không", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
+                }).setNegativeButton("Không", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
 
-                }
-            }).show();
+                    }
+                }).show();
+            }
         }
     }
 

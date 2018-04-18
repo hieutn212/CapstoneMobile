@@ -182,7 +182,7 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... strings) {
             try {
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/User/Get?username=" + username + "&password=" + password);
+                URL url = new URL("http://" + sharedData.IP + "/api/User/Get?username=" + username + "&password=" + password);
                 Log.e(TAG, "doInBackground: Login url" + sharedData.IP);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
@@ -233,7 +233,6 @@ public class LoginActivity extends AppCompatActivity {
                     }).setNegativeButton("Không", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-
                         }
                     }).create().show();
                     Toast.makeText(LoginActivity.this, "Tài khoản hết hạn sử dụng, vui lòng gia hạn bản quyền", Toast.LENGTH_SHORT).show();

@@ -75,7 +75,7 @@ public class MapTrackingFragment extends Fragment {
     private DownloadManager downloadManager;
     public SwipeRefreshLayout swipeRefreshLayout;
     private FloatingActionButton fab;
-    NumberPicker picker;
+    private NumberPicker picker;
     static int width = 0;
     static int height = 0;
     int time = 0;
@@ -155,8 +155,8 @@ public class MapTrackingFragment extends Fragment {
                 WindowManager.LayoutParams params = new WindowManager.LayoutParams();
                 params.copyFrom(dialog.getWindow().getAttributes());
                 params.width = WindowManager.LayoutParams.MATCH_PARENT;
-                Button btn_set = getView().findViewById(R.id.btnSetTime);
-                picker = getView().findViewById(R.id.minutePicker);
+                Button btn_set = dialog.findViewById(R.id.btnSetTime);
+                picker = dialog.findViewById(R.id.minutePicker);
                 picker.setMaxValue(15);
                 picker.setMinValue(2);
                 picker.setWrapSelectorWheel(false);
@@ -433,7 +433,7 @@ public class MapTrackingFragment extends Fragment {
         protected Object doInBackground(Object[] objects) {
             try {
                 int mapId = Integer.parseInt(objects[0].toString());
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Corner/GetAllCornerWithMap?&mapId=" + mapId);
+                URL url = new URL("http://" + sharedData.IP + "/api/Corner/GetAllCornerWithMap?&mapId=" + mapId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
@@ -512,7 +512,7 @@ public class MapTrackingFragment extends Fragment {
         @Override
         protected String doInBackground(String... strings) {
             try {
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Map/GetListMap?buildingId=" + buildingId);
+                URL url = new URL("http://" + sharedData.IP + "/api/Map/GetListMap?buildingId=" + buildingId);
                 Log.e(TAG, "doInBackground: GetListMap" + sharedData.IP);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
@@ -533,7 +533,7 @@ public class MapTrackingFragment extends Fragment {
                         dir.mkdir();
                     }
                     for (int i = 0; i < listMap.size(); i++) {
-                        String urlMap = "http://" + sharedData.IP + ":57305/" + new JSONObject(listMap.get(i)).getString("MapUrl");
+                        String urlMap = "http://" + sharedData.IP + "/" + new JSONObject(listMap.get(i)).getString("MapUrl");
                         String nameMap = new JSONObject(listMap.get(i)).getString("Name");
 
                         //log 4 test
@@ -571,15 +571,22 @@ public class MapTrackingFragment extends Fragment {
     }
 
     public class getDevicePath extends AsyncTask<String, Void, String> {
+        int total = 0;
+        int responseCode = 0;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
 
         @Override
         protected String doInBackground(String... strings) {
             try {
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Position/trackingProductWithTime?deviceId=" + sharedData.DeviceIMEI + "&timeSearch=" + time);
+                URL url = new URL("http://" + sharedData.IP + "/api/Position/trackingProductWithTime?deviceId=" + sharedData.DeviceIMEI + "&timeSearch=" + time);
                 Log.e(TAG, "doInBackground: GetListMap" + sharedData.IP);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
-                int responseCode = connection.getResponseCode();
+                responseCode = connection.getResponseCode();
                 BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String line = "";
                 final StringBuilder responseOutput = new StringBuilder();
@@ -592,25 +599,19 @@ public class MapTrackingFragment extends Fragment {
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     String json = responseOutput.toString();
                     JSONArray list = new JSONArray(json);
-                    int total = list.length();
-                    if (total > 0){
+                    total = list.length();
+                    if (total > 0) {
                         for (int i = 0; i < total; i++) {
                             JSONObject obj = new JSONObject(list.get(i).toString());
                             latitude = obj.getDouble("Latitude");
                             longitude = obj.getDouble("Longitude");
                             altitude = obj.getDouble("Altitude");
-                            getPointMap(latitude,longitude,true);
+                            getPointMap(latitude, longitude, true);
                             Canvas canvas = new Canvas();
                             Paint mPaint = initPaint();
-                            canvas.drawCircle(posX,posY,10,mPaint);
+                            canvas.drawCircle(posX, posY, 10, mPaint);
                         }
                     }
-                    if (total == 0){
-                        Toast.makeText(getActivity(),"Không có dữ liệu của thiết bị trong thời gian này !",Toast.LENGTH_SHORT).show();
-                    }
-                }
-                if (responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
-                    Toast.makeText(getActivity(),"Đã có lỗi xảy ra",Toast.LENGTH_SHORT).show();
                 }
             } catch (MalformedURLException e) {
                 Log.e(TAG, "doInBackground: GetListMap", e);
@@ -620,6 +621,17 @@ public class MapTrackingFragment extends Fragment {
                 Log.e(TAG, "doInBackground: GetListMap", e);
             }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if (responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
+                Toast.makeText(getActivity(), "Đã có lỗi xảy ra", Toast.LENGTH_SHORT).show();
+            }
+            if (total == 0) {
+                Toast.makeText(getActivity(), "Không có dữ liệu của thiết bị trong thời gian này !", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

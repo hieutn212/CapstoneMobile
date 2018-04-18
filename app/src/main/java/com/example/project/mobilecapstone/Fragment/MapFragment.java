@@ -264,9 +264,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
-//                altitude = 15.0;
-//                latitude = 10.85296;
-//                longitude = 106.629554;
             } else {
                 gps.showSettingAlert();
             }
@@ -554,7 +551,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         protected Object doInBackground(Object[] objects) {
             try {
                 int buildingId = Integer.parseInt(objects[0].toString());
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Room/GetListRoom?buildingId=" + buildingId);
+                URL url = new URL("http://" + sharedData.IP + "/api/Room/GetListRoom?buildingId=" + buildingId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
@@ -588,7 +585,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         protected Object doInBackground(Object[] objects) {
             try {
                 int mapId = Integer.parseInt(objects[0].toString());
-                URL url = new URL("http://" + sharedData.IP + ":57305/api/Corner/GetAllCornerWithMap?mapId=" + mapId);
+                URL url = new URL("http://" + sharedData.IP + "/api/Corner/GetAllCornerWithMap?mapId=" + mapId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
@@ -709,7 +706,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                         dir.mkdir();
                     }
                     for (int i = 0; i < listMap.size(); i++) {
-                        String urlMap = "http://" + sharedData.IP + ":57305/" + new JSONObject(listMap.get(i)).getString("MapUrl");
+                        String urlMap = "http://" + sharedData.IP + "/" + new JSONObject(listMap.get(i)).getString("MapUrl");
                         String nameMap = new JSONObject(listMap.get(i)).getString("Name");
 
                         //log 4 test
