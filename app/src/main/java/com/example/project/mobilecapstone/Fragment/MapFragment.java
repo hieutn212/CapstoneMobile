@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.app.IntentService;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -19,7 +20,10 @@ import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -64,7 +68,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     int mapId = 0;
     static float posX = 0;
     static float posY = 0;
-    private String currentFloor = "";
+    private int currentFloor = 0;
     public static Room[] rooms = null;
     public static Corner[] corners = null;
     static float roomPosX = 0;
@@ -137,16 +141,57 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         if (requestCode == REQUEST_CODE_ROOM) {
             if (resultCode == 1) {
                 //Draw a room point
-                float widthMap = (float)data.getDoubleExtra("Width", 0);
-                float lengthMap = (float)data.getDoubleExtra("Length", 0);
+                float widthMap = (float) data.getDoubleExtra("Width", 0);
+                float lengthMap = (float) data.getDoubleExtra("Length", 0);
                 int floor = data.getIntExtra("Floor", 0);
-                roomPosX = Utils.getPixel(width, 24F, widthMap);
-                roomPosY = Utils.getPixel(height , 42F, lengthMap);
+                String message = "";
+                float tempRoomX = Utils.getPixel(width, 24F, widthMap);
+                float tempRoomY = Utils.getPixel(height, 42F, lengthMap);
+                if (floor > currentFloor) {
+                    message = "Bạn phải đi lên tầng " + floor + ". Bạn có muốn xem bản đồ của phòng không?";
+                    confirmDialog(message, tempRoomX, tempRoomY, floor);
+                } else if (floor < currentFloor) {
+                    message = "Bạn phải đi xuống tầng " + floor + ". Bạn có muốn xem bản đồ của phòng không?";
+                    confirmDialog(message, tempRoomX, tempRoomY, floor);
+                } else {
+                    roomPosX = tempRoomX;
+                    roomPosY = tempRoomY;
+                }
             }
             if (resultCode == 0) {
                 //Write your code if there's no result
             }
         }
+    }
+
+    private void confirmDialog(String message, final float posX, final float posY, final int floor) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this.getContext());
+        builder
+                .setMessage(message)
+                .setPositiveButton("Xem bản đồ", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        Bundle bundle = new Bundle();
+                        bundle.putFloat("PosX", posX);
+                        bundle.putFloat("PosY", posY);
+                        bundle.putInt("Floor", floor);
+                        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                        FragmentTransaction transaction = fragmentManager.beginTransaction();
+                        MapSearchRoomFragment map = new MapSearchRoomFragment();
+                        map.setArguments(bundle);
+                        transaction.replace(R.id.content_main, map).addToBackStack("MapSearchRoomFragment");
+                        transaction.commit();
+                    }
+                })
+                .setNegativeButton("Không", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        roomPosX = 0;
+                        roomPosY = 0;
+                        dialog.cancel();
+                    }
+                })
+                .show();
     }
 
     @Override
@@ -230,29 +275,32 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                             filename = nameMap;
                             JSONObject object = new JSONObject(listMap.get(i));
                             getFloor = object.getInt("Id");
-                            currentFloor = object.getString("Floor");
-                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR", ""))) {
+                            currentFloor = object.getInt("Floor");
+                            String sharePreferenceString = sharedPreference.getString("LASTFLOOR", "");
+                            if (sharePreferenceString != "" && currentFloor == Integer.parseInt(sharePreferenceString)) {
                                 String roomJson = sharedPreference.getString("ROOMLIST", null);
                                 String cornerJson = sharedPreference.getString("CORNERLIST", null);
                                 convertToCornerArray(cornerJson);
                                 convertToRoomArray(roomJson);
                             } else {
-                                editor.putString("LASTFLOOR", currentFloor).apply();
+                                editor.putString("LASTFLOOR", currentFloor + "").apply();
                             }
                             break;
                         }
                     } else {
                         if (altitudeMap1 <= altitude) {
                             filename = nameMap;
-                            getFloor = new JSONObject(listMap.get(i)).getInt("Id");
-                            currentFloor = filename.substring(filename.length() - 1);
-                            if (currentFloor.equals(sharedPreference.getString("LASTFLOOR", ""))) {
+                            JSONObject object = new JSONObject(listMap.get(i));
+                            getFloor = object.getInt("Id");
+                            currentFloor = object.getInt("Floor");
+                            String sharePreferenceString = sharedPreference.getString("LASTFLOOR", "");
+                            if (sharePreferenceString != "" && currentFloor == Integer.parseInt(sharePreferenceString)) {
                                 String roomJson = sharedPreference.getString("ROOMLIST", null);
                                 String cornerJson = sharedPreference.getString("CORNERLIST", null);
                                 convertToCornerArray(cornerJson);
                                 convertToRoomArray(roomJson);
                             } else {
-                                editor.putString("LASTFLOOR", currentFloor).apply();
+                                editor.putString("LASTFLOOR", currentFloor + "").apply();
                             }
                             break;
                         }
