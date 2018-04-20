@@ -300,7 +300,9 @@ public class TrackingFragment extends Fragment {
     public void convertToArray(String s) throws JSONException {
         JSONArray array = new JSONArray(s);
         if (array != null) {
-            for (int i = 0; i < array.length(); i++) {
+            for (int i = 0; i < array.length(); i++)
+            {
+                arr.clear();
                 arr.add(array.get(i).toString());
             }
         }

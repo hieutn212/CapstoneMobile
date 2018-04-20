@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -26,6 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Data.UserInfo;
+import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.Fragment.MapFragment;
 import com.example.project.mobilecapstone.Fragment.TrackingFragment;
 import com.example.project.mobilecapstone.R;
@@ -291,16 +293,31 @@ public class HomeActivity extends AppCompatActivity
             transaction.addToBackStack(null);
             transaction.commit();
         } else if (id == R.id.nav_trackers) {
-            fragmentList = fm.getFragments();
-            Fragment temp = fragmentList.get(fragmentList.size() - 1);
-            if (temp.getClass().getName().equals(MapFragment.class.getName())) {
-                MapFragment fragment = (MapFragment) temp;
-                fragment.stopTask = true;
+            if (userInfo.getPurchasePack().equals("2")){
+                fragmentList = fm.getFragments();
+                Fragment temp = fragmentList.get(fragmentList.size() - 1);
+                if (temp.getClass().getName().equals(MapFragment.class.getName())) {
+                    MapFragment fragment = (MapFragment) temp;
+                    fragment.stopTask = true;
+                }
+                FragmentTransaction transaction = fm.beginTransaction();
+                transaction.replace(R.id.content_main, new TrackingFragment());
+                transaction.addToBackStack(null);
+                transaction.commit();
             }
-            FragmentTransaction transaction = fm.beginTransaction();
-            transaction.replace(R.id.content_main, new TrackingFragment());
-            transaction.addToBackStack(null);
-            transaction.commit();
+            else{
+                new AlertDialog.Builder(HomeActivity.this).setTitle("Tài khoản hết hạn").setMessage("Tài khoản bạn không dùng được chức năng này,\nBạn có muốn đến trang web để mua tài khoản VIP?").setPositiveButton("Đến web", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://" + sharedData.IP + ":36110/"));
+                        startActivity(browserIntent);
+                    }
+                }).setNegativeButton("Không", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                    }
+                }).create().show();
+            }
         } else if (id == R.id.nav_settings) {
 
         } else if (id == R.id.nav_logout) {
@@ -336,6 +353,7 @@ public class HomeActivity extends AppCompatActivity
         userInfo.setId(getIntent().getStringExtra("Id"));
         userInfo.setUserName(getIntent().getStringExtra("Username"));
         userInfo.setFullName(getIntent().getStringExtra("Fullname"));
+        userInfo.setPurchasePack(getIntent().getStringExtra("packType"));
         Log.e(TAG, "getUserInfo: " + userInfo.getId() + userInfo.getFullName() + userInfo.getUserName());
     }
 

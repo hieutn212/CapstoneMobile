@@ -33,6 +33,7 @@ import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Activity.HomeActivity;
 import com.example.project.mobilecapstone.Data.Corner;
+import com.example.project.mobilecapstone.Data.Position;
 import com.example.project.mobilecapstone.Data.Room;
 import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.R;
@@ -81,6 +82,7 @@ public class MapTrackingFragment extends Fragment {
     int time = 0;
     private static final String TAG = "MapTrackingFragment";
     CanvasMapView canvasMapView;
+    Position[] posList = null;
     View v;
     private static final int REQUEST_CODE_ROOM = 0x9345;
     Fragment fragment;
@@ -148,7 +150,7 @@ public class MapTrackingFragment extends Fragment {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Dialog dialog = new Dialog(getContext());
+                final Dialog dialog = new Dialog(getContext());
                 dialog.setCancelable(true);
                 dialog.setContentView(R.layout.dialog_time_picker);
                 //window manager to set dialog attributes
@@ -156,15 +158,22 @@ public class MapTrackingFragment extends Fragment {
                 params.copyFrom(dialog.getWindow().getAttributes());
                 params.width = WindowManager.LayoutParams.MATCH_PARENT;
                 Button btn_set = dialog.findViewById(R.id.btnSetTime);
+                Button btn_cancel = dialog.findViewById(R.id.btnCancel);
                 picker = dialog.findViewById(R.id.minutePicker);
                 picker.setMaxValue(15);
-                picker.setMinValue(2);
+                picker.setMinValue(5);
                 picker.setWrapSelectorWheel(false);
                 btn_set.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         time = picker.getValue();
                         new getDevicePath().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    }
+                });
+                btn_cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        dialog.dismiss();
                     }
                 });
                 dialog.show();
@@ -263,10 +272,23 @@ public class MapTrackingFragment extends Fragment {
             scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
             if (first == false) {
-                getPointMap(latitude, longitude, false);
-                if (posX != 0 || posY != 0) {
-                    mPaint.setColor(Color.BLUE);
-                    canvas.drawCircle(posX, posY, 10, mPaint);
+                if (posList != null && posList.length >= 2) {
+                    for (int i = 1; i < posList.length; i++) {
+                        latitude = posList[i].getLat();
+                        longitude = posList[i].getLong();
+                        getPointMap(latitude, longitude, false);
+                        if (posX != 0 || posY != 0) {
+                            mPaint.setColor(Color.BLUE);
+                            canvas.drawCircle(posX, posY, 10, mPaint);
+                        }
+                    }
+                }
+                else{
+                    getPointMap(latitude, longitude, false);
+                    if (posX != 0 || posY != 0) {
+                        mPaint.setColor(Color.BLUE);
+                        canvas.drawCircle(posX, posY, 10, mPaint);
+                    }
                 }
             }
             if (corners != null) {
@@ -275,9 +297,9 @@ public class MapTrackingFragment extends Fragment {
                 }
             }
 
-            Toast.makeText(this.getContext(), "Your location is - \nLat: " +
+            /*Toast.makeText(this.getContext(), "Your location is - \nLat: " +
                             latitude + "\nLong: " + longitude,
-                    Toast.LENGTH_LONG).show();
+                    Toast.LENGTH_LONG).show();*/
         }
 
         private void initPaint() {
@@ -573,6 +595,7 @@ public class MapTrackingFragment extends Fragment {
     public class getDevicePath extends AsyncTask<String, Void, String> {
         int total = 0;
         int responseCode = 0;
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -582,7 +605,8 @@ public class MapTrackingFragment extends Fragment {
         @Override
         protected String doInBackground(String... strings) {
             try {
-                URL url = new URL("http://" + sharedData.IP + "/api/Position/trackingProductWithTime?deviceId=" + sharedData.DeviceIMEI + "&timeSearch=" + time);
+                /*URL url = new URL("http://" + sharedData.IP + "/api/Position/trackingProductWithTime?deviceId=" + sharedData.DeviceIMEI + "&timeSearch=" + time);*/
+                URL url = new URL("http://" + sharedData.IP + "/api/Position/trackingProductWithTime?deviceId=" + sharedData.DeviceIMEI + "&timeSearch=" + 60);
                 Log.e(TAG, "doInBackground: GetListMap" + sharedData.IP);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
@@ -600,19 +624,17 @@ public class MapTrackingFragment extends Fragment {
                     String json = responseOutput.toString();
                     JSONArray list = new JSONArray(json);
                     total = list.length();
+                    Position[] templist = new Position[total];
                     if (total > 0) {
                         for (int i = 0; i < total; i++) {
                             JSONObject obj = new JSONObject(list.get(i).toString());
-                            latitude = obj.getDouble("Latitude");
-                            longitude = obj.getDouble("Longitude");
-                            altitude = obj.getDouble("Altitude");
-                            getPointMap(latitude, longitude, true);
-                            Canvas canvas = new Canvas();
-                            Paint mPaint = initPaint();
-                            canvas.drawCircle(posX, posY, 10, mPaint);
+                            Position pos = new Position(obj.getDouble("Latitude"),obj.getDouble("Longitude"),obj.getDouble("Longitude"));
+                            templist[i] = pos;
                         }
+                        posList = templist;
                     }
                 }
+
             } catch (MalformedURLException e) {
                 Log.e(TAG, "doInBackground: GetListMap", e);
             } catch (IOException e) {
@@ -631,6 +653,8 @@ public class MapTrackingFragment extends Fragment {
             }
             if (total == 0) {
                 Toast.makeText(getActivity(), "Không có dữ liệu của thiết bị trong thời gian này !", Toast.LENGTH_SHORT).show();
+            } else {
+                canvasMapView.invalidate();
             }
         }
     }

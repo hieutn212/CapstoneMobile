@@ -6,7 +6,7 @@ package com.example.project.mobilecapstone.Data;
 
 public class UserInfo {
 
-    public static String Id,fullName,userName;
+    public static String Id,fullName,userName,purchasePack;
 
     public String getId() {
         return Id;
@@ -30,5 +30,13 @@ public class UserInfo {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public static String getPurchasePack() {
+        return purchasePack;
+    }
+
+    public static void setPurchasePack(String purchasePack) {
+        UserInfo.purchasePack = purchasePack;
     }
 }

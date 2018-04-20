@@ -248,9 +248,9 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
-                altitude = 22.0;
+                /*altitude = 22.0;
                 latitude = 10.8529952;
-                longitude = 106.6296252;
+                longitude = 106.6296252;*/
             } else {
                 gps.showSettingAlert();
             }

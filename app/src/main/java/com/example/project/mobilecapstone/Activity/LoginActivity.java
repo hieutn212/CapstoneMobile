@@ -220,6 +220,7 @@ public class LoginActivity extends AppCompatActivity {
                     JSONObject obj = new JSONObject(responseOutput.toString());
                     intent.putExtra("Fullname", obj.getString("Fullname"));
                     intent.putExtra("Id", obj.getString("Id").toString());
+                    intent.putExtra("packType",obj.getString("PackageId"));
                     startActivity(intent);
                     //prevent going back by press back button
                     finish();
@@ -241,6 +242,7 @@ public class LoginActivity extends AppCompatActivity {
                 }
 
             } catch (JSONException e) {
+                Log.e(TAG, "onPostExecute: LOGIN", e );
                 e.printStackTrace();
             }
         }
