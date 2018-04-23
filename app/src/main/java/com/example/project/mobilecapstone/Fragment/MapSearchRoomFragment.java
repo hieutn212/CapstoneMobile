@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -28,6 +29,8 @@ import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Activity.HomeActivity;
 import com.example.project.mobilecapstone.Data.Corner;
+import com.example.project.mobilecapstone.Data.DirectionPoint;
+import com.example.project.mobilecapstone.Data.Marker;
 import com.example.project.mobilecapstone.Data.Room;
 import com.example.project.mobilecapstone.Data.sharedData;
 import com.example.project.mobilecapstone.R;
@@ -45,14 +48,13 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
 
 public class MapSearchRoomFragment extends Fragment {
     public boolean stopTask = false;
-    static double latitude;
-    static double longitude;
     static float posX = 0;
     static float posY = 0;
     static float devicePosX = 0;
@@ -69,12 +71,19 @@ public class MapSearchRoomFragment extends Fragment {
     public SwipeRefreshLayout swipeRefreshLayout;
     static int width = 0;
     static int height = 0;
+    float widthMap = 0;
+    float lengthMap = 0;
     private static final String TAG = "MapTrackingFragment";
     MapSearchRoomFragment.CanvasMapView canvasMapView;
+    FloatingActionButton floatingActionButton;
+    boolean navigate = false;
+    static Marker[] markers = new Marker[6];
+    static List<DirectionPoint> directionPoints = new ArrayList<>();
     View v;
     private static final int REQUEST_CODE_ROOM = 0x9345;
     android.support.v4.app.Fragment fragment;
     private String result = "";
+    static int stairsGo = -1;
 //    private String isMoving;
 //    private Sensor mySensor;
 //    private SensorManager SM;
@@ -97,11 +106,31 @@ public class MapSearchRoomFragment extends Fragment {
         if (bundle != null) {
             posX = bundle.getFloat("PosX");
             posY = bundle.getFloat("PosY");
+            widthMap = bundle.getFloat("WidthMap");
+            lengthMap = bundle.getFloat("LengthMap");
             currentFloor = bundle.getInt("Floor");
+            stairsGo = bundle.getInt("Stairs");
         }
         fragment = this;
         // Inflate the layout for this fragment
         v = inflater.inflate(R.layout.fragment_map_search_room, container, false);
+        floatingActionButton = v.findViewById(R.id.navigation);
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (navigate) {
+                    navigate = false;
+                    directionPoints.clear();
+                    canvasMapView.invalidate();
+                    floatingActionButton.setImageResource(R.drawable.ic_navigation_white_48dp);
+                } else {
+                    navigate = true;
+                    direction(widthMap, lengthMap);
+                    canvasMapView.invalidate();
+                    floatingActionButton.setImageResource(R.drawable.ic_pause_circle_filled_white_48dp);
+                }
+            }
+        });
         return v;
     }
 
@@ -186,6 +215,7 @@ public class MapSearchRoomFragment extends Fragment {
             }
             if (first) {
                 new MapSearchRoomFragment.initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
+                markers = Utils.createListMarker(width, height);
             }
             String path = sharedData.storage + filename + ".png";
             final File temp = new File(sharedData.storage + filename + ".png");
@@ -195,6 +225,7 @@ public class MapSearchRoomFragment extends Fragment {
             map = BitmapFactory.decodeFile(path);
             scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
+            mPaint.setStrokeWidth(20);
             if (first == false) {
                 if (posX != 0 || posY != 0) {
                     mPaint.setColor(Color.BLUE);
@@ -205,6 +236,19 @@ public class MapSearchRoomFragment extends Fragment {
                     int heightScale = iconPlace.getHeight() / 3 * 2;
                     iconPlace = Bitmap.createScaledBitmap(iconPlace, widthScale, heightScale, false);
                     canvas.drawBitmap(iconPlace, posX - (widthScale / 2), posY - heightScale, mPaint);
+                }
+            }
+            if (directionPoints != null) {
+                int sizeDirection = directionPoints.size();
+                if (directionPoints.size() > 1) {
+                    mPaint.setStrokeWidth(10);
+                    mPaint.setColor(Color.GREEN);
+
+                    for (int i = 0; i < sizeDirection - 1; i++) {
+                        DirectionPoint point1 = directionPoints.get(i);
+                        DirectionPoint point2 = directionPoints.get(i + 1);
+                        canvas.drawLine(point1.getPosX(), point1.getPosY(), point2.getPosX(), point2.getPosY(), mPaint);
+                    }
                 }
             }
 //            if (corners != null) {
@@ -221,6 +265,44 @@ public class MapSearchRoomFragment extends Fragment {
             mPaint.setStyle(Paint.Style.FILL_AND_STROKE);
             mPaint.setStrokeCap(Paint.Cap.ROUND); // Cho dau cac duong ve duoc bo tron
             mPaint.setAlpha(150);
+        }
+    }
+
+    public static void direction(float posXT, float posYT) {
+        directionPoints.clear();
+        directionPoints.add(new DirectionPoint(posX, posY));
+        int corner = 1;
+        if (posXT >= 12) {
+            corner = 3;
+        }
+        if (stairsGo == 0) {
+            if (corner == 1) {
+                Marker marker = markers[0];
+                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                marker = markers[4];
+                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+            } else {
+                Marker marker = markers[3];
+                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                marker = markers[4];
+                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+            }
+        } else {
+            if (corner == 1) {
+                Marker marker = markers[1];
+                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                marker = markers[5];
+                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+            } else {
+                Marker marker = markers[2];
+                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                marker = markers[5];
+                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+            }
         }
     }
 

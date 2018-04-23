@@ -5,10 +5,10 @@ package com.example.project.mobilecapstone.Data;
  */
 
 public class DirectionPoint {
-    private double posX;
-    private double posY;
+    private float posX;
+    private float posY;
 
-    public DirectionPoint(double posX, double posY) {
+    public DirectionPoint(float posX, float posY) {
         this.posX = posX;
         this.posY = posY;
     }
@@ -16,19 +16,19 @@ public class DirectionPoint {
     public DirectionPoint() {
     }
 
-    public double getPosX() {
+    public float getPosX() {
         return posX;
     }
 
-    public void setPosX(double posX) {
+    public void setPosX(float posX) {
         this.posX = posX;
     }
 
-    public double getPosY() {
+    public float getPosY() {
         return posY;
     }
 
-    public void setPosY(double posY) {
+    public void setPosY(float posY) {
         this.posY = posY;
     }
 }

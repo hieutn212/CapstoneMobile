@@ -105,6 +105,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     static int currentCorner = 0;
     static List<DirectionPoint> directionPoints = new ArrayList<>();
     static int roomFloor = 0;
+    static double latitudeUpdate = 0;
+    static double longitudeUpdate = 0;
 
     public MapFragment() {
 
@@ -131,9 +133,13 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             public void onClick(View view) {
                 if (navigate) {
                     navigate = false;
+                    directionPoints.clear();
+                    canvasMapView.invalidate();
                     floatingActionButton.setImageResource(R.drawable.ic_navigation_white_48dp);
                 } else {
                     navigate = true;
+                    direction(widthMap, lengthMap);
+                    canvasMapView.invalidate();
                     floatingActionButton.setImageResource(R.drawable.ic_pause_circle_filled_white_48dp);
                 }
             }
@@ -161,6 +167,11 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (navigate) {
+            navigate = false;
+            directionPoints.clear();
+            floatingActionButton.setImageResource(R.drawable.ic_navigation_white_48dp);
+        }
         if (requestCode == REQUEST_CODE_ROOM) {
             if (resultCode == 1) {
                 //Draw a room point
@@ -196,10 +207,14 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 .setPositiveButton("Xem bản đồ", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
+                        int stairsGo = getStairsGo();
                         Bundle bundle = new Bundle();
                         bundle.putFloat("PosX", posX);
                         bundle.putFloat("PosY", posY);
+                        bundle.putFloat("WidthMap", widthMap);
+                        bundle.putFloat("LengthMap", lengthMap);
                         bundle.putInt("Floor", floor);
+                        bundle.putInt("Stairs", stairsGo);
                         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                         FragmentTransaction transaction = fragmentManager.beginTransaction();
                         MapSearchRoomFragment map = new MapSearchRoomFragment();
@@ -214,6 +229,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                     public void onClick(DialogInterface dialog, int id) {
                         roomPosX = 0;
                         roomPosY = 0;
+                        floatingActionButton.setVisibility(View.VISIBLE);
                         dialog.cancel();
                     }
                 })
@@ -368,6 +384,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             map = BitmapFactory.decodeFile(path);
             scaleMap = Bitmap.createScaledBitmap(map, width, height, false);
             canvas.drawBitmap(scaleMap, 0, 0, null);
+            mPaint.setStrokeWidth(20);
+
             if (first == false) {
                 if (reDraw) {
                     gps = new GPSRouter(context);
@@ -375,13 +393,13 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                         latitude = gps.getLatitude();
                         longitude = gps.getLongitude();
                         altitude = gps.getAltitude();
-                        latitude = 10.8529952;
-                        longitude = 106.6296252;
+                        latitude = 10.8529601;
+                        longitude = 106.6295445;
                     } else {
                         gps.showSettingAlert();
                     }
-                    double latitudeUpdate = latitude;
-                    double longitudeUpdate = longitude;
+                    latitudeUpdate = latitude;
+                    longitudeUpdate = longitude;
                     getPointMap(latitudeUpdate, longitudeUpdate, false);
                     reDraw = false;
                 }
@@ -402,8 +420,18 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 canvas.drawBitmap(iconPlace, roomPosX - (widthScale / 2), roomPosY - heightScale, mPaint);
             }
 
-            for (Marker marker : markers) {
-                canvas.drawCircle(marker.getPosX(), marker.getPosY(), 10, mPaint);
+            if (directionPoints != null) {
+                int sizeDirection = directionPoints.size();
+                if (directionPoints.size() > 1) {
+                    mPaint.setStrokeWidth(10);
+                    mPaint.setColor(Color.GREEN);
+
+                    for (int i = 0; i < sizeDirection - 1; i++) {
+                        DirectionPoint point1 = directionPoints.get(i);
+                        DirectionPoint point2 = directionPoints.get(i + 1);
+                        canvas.drawLine(point1.getPosX(), point1.getPosY(), point2.getPosX(), point2.getPosY(), mPaint);
+                    }
+                }
             }
 
             Toast.makeText(this.getContext(), "Your location is - \nLat: " +
@@ -459,7 +487,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                     currentCorner2.getLatitude(), currentCorner2.getLongitude());
             checkX = (float) (width / distanceCorner * min);
             float check = width / 3 - 25;
-            if (checkX > check) {
+            if (checkX > check && currentFloor != 0) {
                 checkX = check;
             }
         } else if (corner == 3) {
@@ -476,7 +504,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             double x = distanceCorner - (min);
             checkX = (float) (width / distanceCorner * x);
             float check = 2 * (width / 3) + 25;
-            if (checkX < check) {
+            if (checkX < check && currentFloor != 0) {
                 checkX = check;
             }
         } else if (corner == 2) {
@@ -512,54 +540,177 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    public static void direction(double posX, double posY) {
-        DirectionPoint point = new DirectionPoint(posX, posY);
-        directionPoints.add(point);
-
-        directionPoints.clear();
-        if(currentFloor != roomFloor){
-            if(currentCorner == 1){
-                Marker marker = markers[0];
-                point.setPosX(marker.getPosX());
-                point.setPosY(marker.getPosY());
-                directionPoints.add(point);
-
-                marker = markers[4];
-                point.setPosY(marker.getPosY());
-                point.setPosX(marker.getPosX());
-                directionPoints.add(point);
+    public static int getStairsGo() {
+        int stairsGo = -1;
+        if (currentCorner == 1) {
+            Corner cornerCloser = corners[1];
+            double min = Utils.HaversineInM(latitudeUpdate, longitudeUpdate, cornerCloser.getLatitude(), cornerCloser.getLongitude());
+            cornerCloser = corners[0];
+            double temp = Utils.HaversineInM(latitudeUpdate, longitudeUpdate, cornerCloser.getLatitude(), cornerCloser.getLongitude());
+            if (min > temp) {
+                stairsGo = 0;
+            } else {
+                stairsGo = 1;
             }
-        }
-        int corner = 1;
-        if (posX >= 12) {
-            corner = 3;
-        }
-
-        if (currentCorner == corner) {
-            directionPoints.add(point);
-
-            point.setPosX(roomPosX);
-            point.setPosY(roomPosY);
-            directionPoints.add(point);
+        } else if (currentCorner == 2) {
+            stairsGo = 1;
+        } else if (currentCorner == 3) {
+            Corner cornerCloser = corners[2];
+            double min = Utils.HaversineInM(latitudeUpdate, longitudeUpdate, cornerCloser.getLatitude(), cornerCloser.getLongitude());
+            cornerCloser = corners[3];
+            double temp = Utils.HaversineInM(latitudeUpdate, longitudeUpdate, cornerCloser.getLatitude(), cornerCloser.getLongitude());
+            if (min > temp) {
+                stairsGo = 0;
+            } else {
+                stairsGo = 1;
+            }
         } else {
-            if(corner == 1 && currentCorner == 2){
-                Marker marker = markers[1];
-                point.setPosX(marker.getPosX());
-                point.setPosY(marker.getPosY());
+            stairsGo = 0;
+        }
+        return stairsGo;
+    }
 
-                point.setPosX(roomPosX);
-                point.setPosY(roomPosY);
-                directionPoints.add(point);
-            }
-            else if(corner == 1 && currentCorner == 4){
-                Marker marker = markers[0];
-                point.setPosX(marker.getPosX());
-                point.setPosY(marker.getPosY());
+    public static void direction(float posXT, float posYT) {
+        directionPoints.clear();
+        directionPoints.add(new DirectionPoint(posX, posY));
 
-                point.setPosX(roomPosX);
-                point.setPosY(roomPosY);
-                directionPoints.add(point);
+        if (currentFloor != roomFloor) {
+            if (currentCorner == 1) {
+                Corner cornerCloser = corners[1];
+                double min = Utils.HaversineInM(latitudeUpdate, longitudeUpdate, cornerCloser.getLatitude(), cornerCloser.getLongitude());
+                cornerCloser = corners[0];
+                double temp = Utils.HaversineInM(latitudeUpdate, longitudeUpdate, cornerCloser.getLatitude(), cornerCloser.getLongitude());
+                if (min > temp) {
+                    Marker marker = markers[0];
+                    directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                    marker = markers[4];
+                    directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                } else {
+                    Marker marker = markers[1];
+                    directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                    marker = markers[5];
+                    directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                }
+            } else if (currentCorner == 2) {
+                Marker marker = markers[5];
+                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+            } else if (currentCorner == 3) {
+                Corner cornerCloser = corners[2];
+                double min = Utils.HaversineInM(latitudeUpdate, longitudeUpdate, cornerCloser.getLatitude(), cornerCloser.getLongitude());
+                cornerCloser = corners[3];
+                double temp = Utils.HaversineInM(latitudeUpdate, longitudeUpdate, cornerCloser.getLatitude(), cornerCloser.getLongitude());
+                if (min > temp) {
+                    Marker marker = markers[3];
+                    directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                    Marker markerFinal = markers[4];
+                    directionPoints.add(new DirectionPoint(markerFinal.getPosX(), markerFinal.getPosY()));
+                } else {
+                    Marker marker = markers[2];
+                    directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                    Marker markerFinal = markers[5];
+                    directionPoints.add(new DirectionPoint(markerFinal.getPosX(), markerFinal.getPosY()));
+                }
+            } else {
+                Marker marker = markers[4];
+                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
             }
+        } else {
+            int corner = 1;
+            if (posXT >= 12) {
+                corner = 3;
+            }
+
+            if (currentCorner != corner) {
+                if (corner == 1 && currentCorner == 2) {
+                    Marker marker = markers[1];
+                    directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                } else if (corner == 1 && currentCorner == 4) {
+                    Marker marker = markers[0];
+                    directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                } else if (corner == 3 && currentCorner == 2) {
+                    Marker marker = markers[2];
+                    directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                } else if (corner == 3 && currentCorner == 4) {
+                    Marker marker = markers[0];
+                    directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                } else {
+                    if (corner == 1 && currentCorner == 3) {
+                        Corner cornerCloser = corners[2];
+                        double min = Utils.HaversineInM(latitudeUpdate, longitudeUpdate, cornerCloser.getLatitude(), cornerCloser.getLongitude());
+                        cornerCloser = corners[3];
+                        double temp = Utils.HaversineInM(latitudeUpdate, longitudeUpdate, cornerCloser.getLatitude(), cornerCloser.getLongitude());
+                        if (min > temp) {
+                            if (posYT <= 14) {
+                                Marker marker = markers[2];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                                marker = markers[1];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                            } else {
+                                Marker marker = markers[3];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                                marker = markers[0];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                            }
+                        } else {
+                            if (posYT > 27.5) {
+                                Marker marker = markers[3];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                                marker = markers[0];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                            } else {
+                                Marker marker = markers[2];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                                marker = markers[1];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                            }
+                        }
+                    } else if (corner == 3 && currentCorner == 1) {
+                        Corner cornerCloser = corners[1];
+                        double min = Utils.HaversineInM(latitudeUpdate, longitudeUpdate, cornerCloser.getLatitude(), cornerCloser.getLongitude());
+                        cornerCloser = corners[0];
+                        double temp = Utils.HaversineInM(latitudeUpdate, longitudeUpdate, cornerCloser.getLatitude(), cornerCloser.getLongitude());
+                        if (min > temp) {
+                            if (posYT <= 14) {
+                                Marker marker = markers[1];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                                marker = markers[2];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                            } else {
+                                Marker marker = markers[0];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                                marker = markers[3];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                            }
+                        } else {
+                            if (posYT < 27.5) {
+                                Marker marker = markers[1];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                                marker = markers[2];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                            } else {
+                                Marker marker = markers[0];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+
+                                marker = markers[3];
+                                directionPoints.add(new DirectionPoint(marker.getPosX(), marker.getPosY()));
+                            }
+                        }
+                    }
+                }
+            }
+            directionPoints.add(new DirectionPoint(roomPosX, roomPosY));
         }
     }
 
@@ -782,6 +933,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     }
 
     //convert json object to array
+
     public void convertToArray(String s) throws JSONException {
         JSONArray array = new JSONArray(s);
         if (array != null) {
