@@ -93,7 +93,6 @@ public class MapSearchRoomFragment extends Fragment {
         sharedPreference = getActivity().getSharedPreferences("ROOM_CORNER_INFO", getActivity().MODE_PRIVATE);
         editor = sharedPreference.edit();
         new MapSearchRoomFragment.GetListMap().execute();
-        new MapSearchRoomFragment.CanvasAsyncTask(MapSearchRoomFragment.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         Bundle bundle = this.getArguments();
         if (bundle != null) {
             posX = bundle.getFloat("PosX");
@@ -102,7 +101,7 @@ public class MapSearchRoomFragment extends Fragment {
         }
         fragment = this;
         // Inflate the layout for this fragment
-        v = inflater.inflate(R.layout.fragment_trackingmap, container, false);
+        v = inflater.inflate(R.layout.fragment_map_search_room, container, false);
         return v;
     }
 
@@ -200,13 +199,19 @@ public class MapSearchRoomFragment extends Fragment {
                 if (posX != 0 || posY != 0) {
                     mPaint.setColor(Color.BLUE);
                     canvas.drawCircle(posX, posY, 10, mPaint);
+
+                    Bitmap iconPlace = BitmapFactory.decodeResource(getResources(), R.drawable.ic_place_blue);
+                    int widthScale = iconPlace.getWidth() / 3 * 2;
+                    int heightScale = iconPlace.getHeight() / 3 * 2;
+                    iconPlace = Bitmap.createScaledBitmap(iconPlace, widthScale, heightScale, false);
+                    canvas.drawBitmap(iconPlace, posX - (widthScale / 2), posY - heightScale, mPaint);
                 }
             }
-            if (corners != null) {
-                if (corners.length == 4) {
-                    first = false;
-                }
-            }
+//            if (corners != null) {
+//                if (corners.length == 4) {
+//                    first = false;
+//                }
+//            }
 
         }
 
@@ -389,6 +394,13 @@ public class MapSearchRoomFragment extends Fragment {
                 e.printStackTrace();
             }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Object o) {
+            super.onPostExecute(o);
+            canvasMapView.first = false;
+            canvasMapView.invalidate();
         }
     }
 

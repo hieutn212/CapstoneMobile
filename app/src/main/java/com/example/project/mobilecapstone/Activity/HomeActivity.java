@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Data.UserInfo;
 import com.example.project.mobilecapstone.Fragment.MapFragment;
+import com.example.project.mobilecapstone.Fragment.MapTrackingFragment;
 import com.example.project.mobilecapstone.Fragment.TrackingFragment;
 import com.example.project.mobilecapstone.R;
 
@@ -286,6 +287,12 @@ public class HomeActivity extends AppCompatActivity
             startActivityForResult(intent,REQUEST_CODE_ROOM);
         }*/
         if (id == R.id.nav_map) {
+            fragmentList = fm.getFragments();
+            Fragment temp = fragmentList.get(fragmentList.size() - 1);
+            if (temp.getClass().getName().equals(MapTrackingFragment.class.getName())) {
+                MapTrackingFragment fragment = (MapTrackingFragment) temp;
+                fragment.stopTask = true;
+            }
             FragmentTransaction transaction = fm.beginTransaction();
             transaction.replace(R.id.content_main, new MapFragment());
             transaction.addToBackStack(null);
