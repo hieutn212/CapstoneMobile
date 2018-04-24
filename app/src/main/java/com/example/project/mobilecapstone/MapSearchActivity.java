@@ -78,7 +78,7 @@ public class MapSearchActivity extends AppCompatActivity {
             public boolean onQueryTextSubmit(String query) {
                 roomName = query;
                 buildingId = 1;
-                new getRoom().execute();
+                new getRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
                 return true;
             }
@@ -199,6 +199,7 @@ public class MapSearchActivity extends AppCompatActivity {
                     intent.putExtra("Floor", lstSource[position].getFloor());
                     intent.putExtra("Width", lstSource[position].getWidth());
                     intent.putExtra("Length", lstSource[position].getLength());
+
                     setResult(1, intent);
                     MapSearchActivity.this.finish();
                     /*new getRoom().execute();*/

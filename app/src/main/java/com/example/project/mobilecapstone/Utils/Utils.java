@@ -1,6 +1,7 @@
 package com.example.project.mobilecapstone.Utils;
 
 import com.example.project.mobilecapstone.Data.Corner;
+import com.example.project.mobilecapstone.Data.Marker;
 
 /**
  * Created by ADMIN on 3/6/2018.
@@ -74,5 +75,63 @@ public class Utils {
         double result = Math.sqrt(temp);
 
         return result;
+    }
+
+    public static Marker[] createListMarker(float width, float height) {
+        Marker[] markers = new Marker[6];
+
+        Marker marker = new Marker();
+        marker.setName("Corner");
+        marker.setPosition(1);
+        float temp = getPixel(width, 24F, 6);
+        marker.setPosX(temp);
+        temp = getPixel(height, 42F, 40);
+        marker.setPosY(temp);
+        markers[0] = marker;
+
+        Marker marker1 = new Marker();
+        marker1.setName("Corner");
+        marker1.setPosition(2);
+        temp = getPixel(width, 24F, 6);
+        marker1.setPosX(temp);
+        temp = getPixel(height, 42F, 2);
+        marker1.setPosY(temp);
+        markers[1] = marker1;
+
+        Marker marker2 = new Marker();
+        marker2.setName("Corner");
+        marker2.setPosition(3);
+        temp = getPixel(width, 24F, 18);
+        marker2.setPosX(temp);
+        temp = getPixel(height, 42F, 2);
+        marker2.setPosY(temp);
+        markers[2] = marker2;
+
+        Marker marker3 = new Marker();
+        marker3.setName("Corner");
+        marker3.setPosition(4);
+        temp = getPixel(width, 24F, 18);
+        marker3.setPosX(temp);
+        temp = getPixel(height, 42F, 40);
+        marker3.setPosY(temp);
+        markers[3] = marker3;
+
+        Marker marker4 = new Marker();
+        marker4.setName("Stairs1");
+        marker4.setPosition(5);
+        marker4.setPosX(0);
+        temp = getPixel(height, 42F, 40);
+        marker4.setPosY(temp);
+        markers[4] = marker4;
+
+        Marker marker5 = new Marker();
+        marker5.setName("Stairs2");
+        marker5.setPosition(6);
+        marker5.setPosX(0);
+        temp = getPixel(height, 42F, 2);
+        marker5.setPosY(temp);
+        markers[5] = marker5;
+
+        return markers;
     }
 }
