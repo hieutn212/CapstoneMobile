@@ -95,7 +95,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     boolean first = true;
     int checkFloor = 0;
     int countChangeFloor = 0;
-    int getFloor = -1;
+    int getFloor = 0;
     FloatingActionButton floatingActionButton;
     String nameMap = "";
     boolean navigate = false;
@@ -290,7 +290,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
-                altitude = 10.0;
+//                altitude = 10.0;
 //                latitude = 10.8529952;
 //                longitude = 106.6296252;
             } else {
@@ -318,10 +318,10 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                             currentFloor = object.getInt("Floor");
                             String sharePreferenceString = sharedPreference.getString("LASTFLOOR", "");
                             if (sharePreferenceString != "" && currentFloor == Integer.parseInt(sharePreferenceString)) {
-                                String roomJson = sharedPreference.getString("ROOMLIST", null);
+//                                String roomJson = sharedPreference.getString("ROOMLIST", null);
                                 String cornerJson = sharedPreference.getString("CORNERLIST", null);
                                 convertToCornerArray(cornerJson);
-                                convertToRoomArray(roomJson);
+//                                convertToRoomArray(roomJson);
                             } else {
                                 editor.putString("LASTFLOOR", currentFloor + "").apply();
                             }
@@ -334,10 +334,10 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                             currentFloor = object.getInt("Floor");
                             String sharePreferenceString = sharedPreference.getString("LASTFLOOR", "");
                             if (sharePreferenceString != "" && currentFloor == Integer.parseInt(sharePreferenceString)) {
-                                String roomJson = sharedPreference.getString("ROOMLIST", null);
+//                                String roomJson = sharedPreference.getString("ROOMLIST", null);
                                 String cornerJson = sharedPreference.getString("CORNERLIST", null);
                                 convertToCornerArray(cornerJson);
-                                convertToRoomArray(roomJson);
+//                                convertToRoomArray(roomJson);
                             } else {
                                 editor.putString("LASTFLOOR", currentFloor + "").apply();
                             }
@@ -372,7 +372,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             if (first) {
                 markers = Utils.createListMarker(width, height);
                 mapId = getFloor;
-                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
+//                new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
                 new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
             }
             filename = nameMap;
@@ -393,14 +393,14 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                         latitude = gps.getLatitude();
                         longitude = gps.getLongitude();
                         altitude = gps.getAltitude();
-                        latitude = 10.8529601;
-                        longitude = 106.6295445;
+//                        latitude = 10.8529983;
+//                        longitude = 106.6296344;
                     } else {
                         gps.showSettingAlert();
                     }
                     latitudeUpdate = latitude;
                     longitudeUpdate = longitude;
-                    getPointMap(latitudeUpdate, longitudeUpdate, false);
+                    getPointMap(latitudeUpdate, longitudeUpdate);
                     reDraw = false;
                 }
                 if (posX != 0 || posY != 0) {
@@ -418,6 +418,16 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 iconPlace = Bitmap.createScaledBitmap(iconPlace, widthScale, heightScale, false);
 
                 canvas.drawBitmap(iconPlace, roomPosX - (widthScale / 2), roomPosY - heightScale, mPaint);
+            }
+//            canvas.drawCircle(Utils.getPixel(width, 24F, 16.8F), Utils.getPixel(height, 42F, 38.3F), 10, mPaint);
+//            canvas.drawCircle(Utils.getPixel(width, 24F, 7.3F), Utils.getPixel(height, 42F, 4.3F), 10, mPaint);
+
+            if (navigate) {
+                direction(widthMap, lengthMap);
+                if (currentFloor != roomFloor) {
+                    roomPosX = 0;
+                    roomPosY = 0;
+                }
             }
 
             if (directionPoints != null) {
@@ -449,7 +459,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    public static void getPointMap(double latitude, double longitude, boolean isDevice) {
+    public static void getPointMap(double latitude, double longitude) {
 
         int corner = 1;
         double min = Utils.PerpendicularDistance(corners[0], corners[1], longitude, latitude);
@@ -486,9 +496,9 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
                     currentCorner2.getLatitude(), currentCorner2.getLongitude());
             checkX = (float) (width / distanceCorner * min);
-            float check = width / 3 - 25;
+            float check = Utils.getPixel(width, 24F, 7.7F);
             if (checkX > check && currentFloor != 0) {
-                checkX = check;
+                checkX = Utils.getPixel(width, 24F, 7.3F);
             }
         } else if (corner == 3) {
             Corner currentCorner1 = corners[2];
@@ -503,9 +513,9 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                     currentCorner2.getLatitude(), currentCorner2.getLongitude());
             double x = distanceCorner - (min);
             checkX = (float) (width / distanceCorner * x);
-            float check = 2 * (width / 3) + 25;
+            float check = Utils.getPixel(width, 24F, 16.5F);
             if (checkX < check && currentFloor != 0) {
-                checkX = check;
+                checkX = Utils.getPixel(width, 24F, 16.8F);
             }
         } else if (corner == 2) {
             Corner currentCorner1 = corners[2];
@@ -519,6 +529,10 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             distanceCorner = Utils.HaversineInM(currentCorner1.getLatitude(), currentCorner1.getLongitude(),
                     currentCorner2.getLatitude(), currentCorner2.getLongitude());
             checkY = (float) (height / distanceCorner * min);
+            float check = Utils.getPixel(height, 42F, 4.3F);
+            if (checkY > check && currentFloor != 0) {
+                checkY = Utils.getPixel(height, 42F, 4.3F);
+            }
         } else if (corner == 4) {
             Corner currentCorner1 = corners[3];
             Corner currentCorner2 = corners[0];
@@ -532,6 +546,10 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                     currentCorner2.getLatitude(), currentCorner2.getLongitude());
             double x = distanceCorner - min;
             checkY = (float) (height / distanceCorner * x);
+            float check = Utils.getPixel(height, 42F, 38F);
+            if (checkY < check && currentFloor != 0) {
+                checkY = Utils.getPixel(height, 42F, 38.3F);
+            }
         }
 
         if ((checkX <= width && checkX >= 0) && (checkY <= height && checkY >= 0)) {
@@ -573,7 +591,23 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     public static void direction(float posXT, float posYT) {
         directionPoints.clear();
         directionPoints.add(new DirectionPoint(posX, posY));
-
+        float checkInRoomX = Utils.getPixel(width, 24F, 4);
+        float checkInRoomX2 = Utils.getPixel(width, 24F, 20);
+        if (checkInRoomX >= posX) {
+            float temp = Utils.getPixel(width, 24F, 6);
+            directionPoints.add(new DirectionPoint(temp, posY));
+        } else if (posX >= checkInRoomX2) {
+            float temp = Utils.getPixel(width, 24F, 18);
+            directionPoints.add(new DirectionPoint(temp, posY));
+        }
+        int currentCorner = 1;
+        if (posX >= Utils.getPixel(width, 24F, 16.5F)) {
+            currentCorner = 3;
+        } else if (posY <= Utils.getPixel(height, 42F, 4.3F)) {
+            currentCorner = 2;
+        } else if (posY >= Utils.getPixel(height, 42F, 38F)) {
+            currentCorner = 4;
+        }
         if (currentFloor != roomFloor) {
             if (currentCorner == 1) {
                 Corner cornerCloser = corners[1];
