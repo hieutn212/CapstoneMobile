@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" >
-            <ImageView android:src="@drawable/ic_menu_send"
+            <ImageView android:src="@drawable/logo"
                 android:layout_width="wrap_content"
                 android:layout_height="72dp"
                 android:layout_marginBottom="24dp"
@@ -89,7 +89,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Ngày sinh"
-                        android:inputType="textEmailAddress" />
+                        android:inputType="none"
+                        android:focusable="false"/>
                 </android.support.design.widget.TextInputLayout>
 
                 <Button
@@ -97,6 +98,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="2"
+                    android:visibility="gone"
                     android:text="" />
 
             </LinearLayout>
@@ -109,8 +111,7 @@
                 android:layout_marginTop="24dp"
                 android:layout_marginBottom="24dp"
                 android:padding="12dp"
-                android:text="@string/register_btn_submit"
-                android:onClick="OnRegisterClick"/>
+                android:text="@string/register_btn_submit" />
 
             <TextView android:id="@+id/link_login"
                 android:layout_width="fill_parent"

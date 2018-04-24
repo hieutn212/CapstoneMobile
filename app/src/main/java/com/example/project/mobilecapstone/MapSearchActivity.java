@@ -86,10 +86,10 @@ public class MapSearchActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) {
                 if (newText != null && !newText.isEmpty()) {
-                    List<Room> lstFound = new ArrayList();
+                    List<String> lstFound = new ArrayList();
                     for (Room r : lstSource) {
                         if (r.getName().contains(newText))
-                            lstFound.add(r);
+                            lstFound.add(r.getName());
                     }
 
                     ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this, android.R.layout.simple_list_item_1, lstFound);
@@ -97,7 +97,7 @@ public class MapSearchActivity extends AppCompatActivity {
                 } else {
                     //if search text is null
                     //return default
-                    ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this, android.R.layout.simple_list_item_1, lstSource);
+                    ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this, android.R.layout.simple_list_item_1, lstName);
                     lstView.setAdapter(adapter);
                 }
                 return true;

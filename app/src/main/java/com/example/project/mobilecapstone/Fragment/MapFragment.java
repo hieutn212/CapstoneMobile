@@ -247,10 +247,10 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             if (gps.canGetLocation()) {
                 latitude = gps.getLatitude();
                 longitude = gps.getLongitude();
-                altitude = gps.getAltitude();
-                /*altitude = 22.0;
+                /*altitude = gps.getAltitude();*/
+                altitude = 22.0;
                 latitude = 10.8529952;
-                longitude = 106.6296252;*/
+                longitude = 106.6296252;
             } else {
                 gps.showSettingAlert();
             }
@@ -366,6 +366,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                             latitude + "\nLong: " + longitude + "\nAltitude: " + altitude
                             + "\nX: " + posX + "\nY: " + posY + "\n" + filename,
                     Toast.LENGTH_LONG).show();
+
+            Log.i(TAG, "LOCATION LOG: Latitude: "+latitude+"|| Longitude: "+longitude+"|| Altitude: "+altitude+"|| X: "+posX+"|| Y: "+posY);
         }
 
         private void initPaint() {

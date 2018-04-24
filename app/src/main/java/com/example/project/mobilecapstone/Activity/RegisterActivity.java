@@ -87,6 +87,19 @@ public class RegisterActivity extends AppCompatActivity {
                 new CreateAccount().execute();
             }
         });
+
+        txtDoB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Calendar calendar = Calendar.getInstance();
+                int year = calendar.get(Calendar.YEAR);
+                int month = calendar.get(Calendar.MONTH);
+                int day = calendar.get(Calendar.DAY_OF_MONTH);
+                DatePickerDialog dialog = new DatePickerDialog(RegisterActivity.this, listener, year, month, day);
+                dialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+                dialog.show();
+            }
+        });
     }
 
 

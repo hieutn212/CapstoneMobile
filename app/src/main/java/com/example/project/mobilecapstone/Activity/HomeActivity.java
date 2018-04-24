@@ -318,9 +318,9 @@ public class HomeActivity extends AppCompatActivity
                     }
                 }).create().show();
             }
-        } else if (id == R.id.nav_settings) {
+        } /*else if (id == R.id.nav_settings) {
 
-        } else if (id == R.id.nav_logout) {
+        }*/ else if (id == R.id.nav_logout) {
             new AlertDialog.Builder(this).setTitle("Đăng xuất ?").setMessage("Bạn có muốn đăng xuất ?").setPositiveButton("Có", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {

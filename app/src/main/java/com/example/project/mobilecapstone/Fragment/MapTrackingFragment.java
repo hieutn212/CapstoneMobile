@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -150,33 +151,47 @@ public class MapTrackingFragment extends Fragment {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final Dialog dialog = new Dialog(getContext());
-                dialog.setCancelable(true);
-                dialog.setContentView(R.layout.dialog_time_picker);
-                //window manager to set dialog attributes
-                WindowManager.LayoutParams params = new WindowManager.LayoutParams();
-                params.copyFrom(dialog.getWindow().getAttributes());
-                params.width = WindowManager.LayoutParams.MATCH_PARENT;
-                Button btn_set = dialog.findViewById(R.id.btnSetTime);
-                Button btn_cancel = dialog.findViewById(R.id.btnCancel);
-                picker = dialog.findViewById(R.id.minutePicker);
-                picker.setMaxValue(15);
-                picker.setMinValue(5);
-                picker.setWrapSelectorWheel(false);
-                btn_set.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        time = picker.getValue();
-                        new getDevicePath().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                    }
-                });
-                btn_cancel.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        dialog.dismiss();
-                    }
-                });
-                dialog.show();
+                if (posList == null){
+                    final Dialog dialog = new Dialog(getContext());
+                    dialog.setCancelable(true);
+                    dialog.setContentView(R.layout.dialog_time_picker);
+                    //window manager to set dialog attributes
+                    WindowManager.LayoutParams params = new WindowManager.LayoutParams();
+                    params.copyFrom(dialog.getWindow().getAttributes());
+                    params.width = WindowManager.LayoutParams.MATCH_PARENT;
+                    Button btn_set = dialog.findViewById(R.id.btnSetTime);
+                    Button btn_cancel = dialog.findViewById(R.id.btnCancel);
+                    picker = dialog.findViewById(R.id.minutePicker);
+                    picker.setMaxValue(15);
+                    picker.setMinValue(5);
+                    picker.setWrapSelectorWheel(false);
+                    btn_set.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            time = picker.getValue();
+                            new getDevicePath().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                        }
+                    });
+                    btn_cancel.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            dialog.dismiss();
+                            fab.setImageResource(R.drawable.ic_near_me_white_48dp);
+                        }
+                    });
+                    dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                        @Override
+                        public void onCancel(DialogInterface dialogInterface) {
+                            fab.setImageResource(R.drawable.ic_near_me_white_48dp);
+                        }
+                    });
+                    dialog.show();
+                    fab.setImageResource(R.drawable.ic_close_white_48dp);
+                }
+                else{
+                    canvasMapView.invalidate();
+                    fab.setImageResource(R.drawable.ic_near_me_white_48dp);
+                }
             }
         });
     }
