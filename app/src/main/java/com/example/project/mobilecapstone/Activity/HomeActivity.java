@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -42,6 +43,8 @@ public class HomeActivity extends AppCompatActivity
     UserInfo userInfo = new UserInfo();
     private static final String TAG = "HomeActivity";
     List<Fragment> fragmentList;
+    FloatingActionButton floatingDirectionButton;
+    FloatingActionButton floatingSwitchFloorButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,13 +67,16 @@ public class HomeActivity extends AppCompatActivity
         // Header elements
         TextView txtUsername = headerView.findViewById(R.id.txtUsernameNav);
         TextView txtFullname = headerView.findViewById(R.id.txtFullnameNav);
+        //floating buttons
+        floatingDirectionButton = findViewById(R.id.navigation);
+        floatingSwitchFloorButton = findViewById(R.id.switch_floor);
         // Set username & fullname
         txtUsername.setText(userInfo.getUserName());
         txtFullname.setText(userInfo.getFullName());
         //check for permissions
         checkPermissions();
 
-        fm.beginTransaction().replace(R.id.content_main, new MapFragment()).commit();
+        fm.beginTransaction().replace(R.id.content_main, new MapFragment(), "MAP").commit();
         //set home fragment selected on launch
 
     }
@@ -223,6 +229,10 @@ public class HomeActivity extends AppCompatActivity
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
+        }else if (floatingDirectionButton.getVisibility() == View.VISIBLE || floatingSwitchFloorButton.getVisibility() == View.VISIBLE){
+            floatingDirectionButton.setVisibility(View.INVISIBLE);
+            floatingSwitchFloorButton.setVisibility(View.INVISIBLE);
+            fm.beginTransaction().replace(R.id.content_main, new MapFragment(), "MAP").commit();
         } else {
             if (fm.getBackStackEntryCount() > 0){
                 fm.popBackStack();

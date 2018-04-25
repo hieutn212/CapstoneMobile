@@ -138,6 +138,7 @@ public class MapTrackingFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         swipeRefreshLayout = getView().findViewById(R.id.swipeLayout);
+        swipeRefreshLayout.setColorSchemeResources(R.color.Refresh1, R.color.Refresh2, R.color.Refresh3, R.color.Refresh4);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @SuppressLint("ResourceAsColor")
             @Override
