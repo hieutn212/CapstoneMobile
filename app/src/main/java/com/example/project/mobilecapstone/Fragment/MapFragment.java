@@ -96,7 +96,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     int checkFloor = 0;
     int countChangeFloor = 0;
     int getFloor = -1;
-    FloatingActionButton floatingActionButton;
+    FloatingActionButton floatingDirectionButton;
+    FloatingActionButton floatingSwitchFloorButton;
     String nameMap = "";
     boolean navigate = false;
     static Marker[] markers = new Marker[6];
@@ -107,6 +108,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     static int roomFloor = 0;
     static double latitudeUpdate = 0;
     static double longitudeUpdate = 0;
+    FragmentManager fragmentManager;
 
     public MapFragment() {
 
@@ -115,35 +117,47 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Bundle bundle = this.getArguments();
+        if (bundle != null){
+            navigate = bundle.getBoolean("navigate");
+        }
         downloadManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
         sharedPreference = getActivity().getSharedPreferences("ROOM_CORNER_INFO", getActivity().MODE_PRIVATE);
         editor = sharedPreference.edit();
+        fragmentManager = getActivity().getSupportFragmentManager();
         new GetListMap().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 //        new initListRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 1);
-
         fragment = this;
         // Inflate the layout for this fragment
         v = inflater.inflate(R.layout.fragment_map, container, false);
         //assign text view
         btnSearch = v.findViewById(R.id.buttonSearch);
         btnSearch.setOnClickListener(this);
-        floatingActionButton = v.findViewById(R.id.navigation);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+        floatingDirectionButton = getActivity().findViewById(R.id.navigation);
+        floatingSwitchFloorButton = getActivity().findViewById(R.id.switch_floor);
+        floatingDirectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (navigate) {
                     navigate = false;
                     directionPoints.clear();
                     canvasMapView.invalidate();
-                    floatingActionButton.setImageResource(R.drawable.ic_navigation_white_48dp);
+                    floatingDirectionButton.setImageResource(R.drawable.ic_navigation_white_48dp);
                 } else {
                     navigate = true;
                     direction(widthMap, lengthMap);
                     canvasMapView.invalidate();
-                    floatingActionButton.setImageResource(R.drawable.ic_pause_circle_filled_white_48dp);
+                    floatingDirectionButton.setImageResource(R.drawable.ic_pause_circle_filled_white_48dp);
                 }
             }
         });
+        if (navigate) {
+            direction(widthMap, lengthMap);
+            floatingDirectionButton.setImageResource(R.drawable.ic_pause_circle_filled_white_48dp);
+        } else {
+            directionPoints.clear();
+            floatingDirectionButton.setImageResource(R.drawable.ic_navigation_white_48dp);
+        }
         return v;
     }
 
@@ -170,18 +184,18 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         if (navigate) {
             navigate = false;
             directionPoints.clear();
-            floatingActionButton.setImageResource(R.drawable.ic_navigation_white_48dp);
+            floatingDirectionButton.setImageResource(R.drawable.ic_navigation_white_48dp);
         }
         if (requestCode == REQUEST_CODE_ROOM) {
             if (resultCode == 1) {
                 //Draw a room point
                 widthMap = (float) data.getDoubleExtra("Width", 0);
                 lengthMap = (float) data.getDoubleExtra("Length", 0);
-                int floor = data.getIntExtra("Floor", 0);
+                final int floor = data.getIntExtra("Floor", 0);
                 roomFloor = floor;
                 String message = "";
-                float tempRoomX = Utils.getPixel(width, 24F, widthMap);
-                float tempRoomY = Utils.getPixel(height, 42F, lengthMap);
+                final float tempRoomX = Utils.getPixel(width, 24F, widthMap);
+                final float tempRoomY = Utils.getPixel(height, 42F, lengthMap);
                 if (floor > currentFloor) {
                     message = "Bạn phải đi lên tầng " + floor + ". Bạn có muốn xem bản đồ của phòng không?";
                     confirmDialog(message, tempRoomX, tempRoomY, floor);
@@ -191,8 +205,31 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 } else {
                     roomPosX = tempRoomX;
                     roomPosY = tempRoomY;
-                    floatingActionButton.setVisibility(View.VISIBLE);
+                    floatingDirectionButton.setVisibility(View.VISIBLE);
+                    floatingSwitchFloorButton.setVisibility(View.VISIBLE);
                 }
+                //init button click listener
+                floatingSwitchFloorButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        int stairsGo = getStairsGo();
+                        Bundle bundle = new Bundle();
+                        bundle.putFloat("PosX", tempRoomX);
+                        bundle.putFloat("PosY", tempRoomY);
+                        bundle.putFloat("WidthMap", widthMap);
+                        bundle.putFloat("LengthMap", lengthMap);
+                        bundle.putInt("Floor", floor);
+                        bundle.putInt("Stairs", stairsGo);
+                        bundle.putBoolean("navigate", navigate);
+                        FragmentTransaction transaction = fragmentManager.beginTransaction();
+                        MapSearchRoomFragment map = new MapSearchRoomFragment();
+                        map.setArguments(bundle);
+                        transaction.replace(R.id.content_main, map);
+                        stopTask = true;
+                        canvasMapView.invalidate();
+                        transaction.commit();
+                    }
+                });
             }
             if (resultCode == 0) {
                 //Write your code if there's no result
@@ -207,6 +244,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 .setPositiveButton("Xem bản đồ", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
+                        /*floatingSwitchFloorButton.setVisibility(View.VISIBLE);*/
                         int stairsGo = getStairsGo();
                         Bundle bundle = new Bundle();
                         bundle.putFloat("PosX", posX);
@@ -215,12 +253,14 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                         bundle.putFloat("LengthMap", lengthMap);
                         bundle.putInt("Floor", floor);
                         bundle.putInt("Stairs", stairsGo);
-                        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                        /*FragmentManager fragmentManager = getActivity().getSupportFragmentManager();*/
                         FragmentTransaction transaction = fragmentManager.beginTransaction();
                         MapSearchRoomFragment map = new MapSearchRoomFragment();
                         map.setArguments(bundle);
                         transaction.replace(R.id.content_main, map).addToBackStack("MapSearchRoomFragment");
                         stopTask = true;
+                        floatingDirectionButton.setVisibility(View.VISIBLE);
+                        floatingSwitchFloorButton.setVisibility(View.VISIBLE);
                         transaction.commit();
                     }
                 })
@@ -229,7 +269,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                     public void onClick(DialogInterface dialog, int id) {
                         roomPosX = 0;
                         roomPosY = 0;
-                        floatingActionButton.setVisibility(View.VISIBLE);
+                        floatingDirectionButton.setVisibility(View.VISIBLE);
+                        floatingSwitchFloorButton.setVisibility(View.VISIBLE);
                         dialog.cancel();
                     }
                 })
@@ -291,8 +332,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 longitude = gps.getLongitude();
                 altitude = gps.getAltitude();
                 altitude = 10.0;
-//                latitude = 10.8529952;
-//                longitude = 106.6296252;
+                latitude = 10.8529952;
+                longitude = 106.6296252;
             } else {
                 gps.showSettingAlert();
             }

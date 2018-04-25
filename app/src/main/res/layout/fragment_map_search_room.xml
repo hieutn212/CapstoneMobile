@@ -11,17 +11,31 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+
         <android.support.design.widget.FloatingActionButton
-            android:id="@+id/navigation"
+            android:id="@+id/switch_floor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
             android:clickable="true"
-            android:visibility="visible"
+            android:visibility="invisible"
+            app:backgroundTint="@color/colorAccent"
+            app:fabSize="normal"
+            app:srcCompat="@drawable/ic_layers_white_48dp" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/navigation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_margin="@dimen/fab_margin"
+            android:clickable="true"
+            android:visibility="invisible"
             app:backgroundTint="@color/colorAccent"
             app:fabSize="normal"
             app:srcCompat="@drawable/ic_directions_white_48dp" />
+
     </FrameLayout>
 
 

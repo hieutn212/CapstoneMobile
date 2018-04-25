@@ -140,9 +140,11 @@ public class MapSearchActivity extends AppCompatActivity {
                 }
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
+                Log.e(TAG, "doInBackground: ", e);
                 e.printStackTrace();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
+                Log.e(TAG, "doInBackground: ", e);
                 e.printStackTrace();
             }
             return null;
@@ -199,7 +201,6 @@ public class MapSearchActivity extends AppCompatActivity {
                     intent.putExtra("Floor", lstSource[position].getFloor());
                     intent.putExtra("Width", lstSource[position].getWidth());
                     intent.putExtra("Length", lstSource[position].getLength());
-
                     setResult(1, intent);
                     MapSearchActivity.this.finish();
                     /*new getRoom().execute();*/
@@ -224,6 +225,7 @@ public class MapSearchActivity extends AppCompatActivity {
                 lstName[i] = jsonObject.getString("Name");
             }
         } catch (JSONException e) {
+            Log.e(TAG, "convertToRoomArray: ", e);
             e.printStackTrace();
         }
     }

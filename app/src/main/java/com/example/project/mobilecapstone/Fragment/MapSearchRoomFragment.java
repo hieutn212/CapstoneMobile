@@ -18,6 +18,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -75,13 +76,15 @@ public class MapSearchRoomFragment extends Fragment {
     float lengthMap = 0;
     private static final String TAG = "MapTrackingFragment";
     MapSearchRoomFragment.CanvasMapView canvasMapView;
-    FloatingActionButton floatingActionButton;
+    FloatingActionButton floatingDirectionButton;
+    FloatingActionButton floatingSwitchFloor;
     boolean navigate = false;
     static Marker[] markers = new Marker[6];
     static List<DirectionPoint> directionPoints = new ArrayList<>();
     View v;
     private static final int REQUEST_CODE_ROOM = 0x9345;
     android.support.v4.app.Fragment fragment;
+    FragmentManager fragmentManager;
     private String result = "";
     static int stairsGo = -1;
 //    private String isMoving;
@@ -97,10 +100,10 @@ public class MapSearchRoomFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         downloadManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
         sharedPreference = getActivity().getSharedPreferences("ROOM_CORNER_INFO", getActivity().MODE_PRIVATE);
         editor = sharedPreference.edit();
+        fragmentManager = getActivity().getSupportFragmentManager();
         new MapSearchRoomFragment.GetListMap().execute();
         Bundle bundle = this.getArguments();
         if (bundle != null) {
@@ -110,27 +113,48 @@ public class MapSearchRoomFragment extends Fragment {
             lengthMap = bundle.getFloat("LengthMap");
             currentFloor = bundle.getInt("Floor");
             stairsGo = bundle.getInt("Stairs");
+            navigate = bundle.getBoolean("navigate");
         }
         fragment = this;
         // Inflate the layout for this fragment
         v = inflater.inflate(R.layout.fragment_map_search_room, container, false);
-        floatingActionButton = v.findViewById(R.id.navigation);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+        floatingDirectionButton = getActivity().findViewById(R.id.navigation);
+        floatingSwitchFloor = getActivity().findViewById(R.id.switch_floor);
+        floatingDirectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (navigate) {
                     navigate = false;
                     directionPoints.clear();
                     canvasMapView.invalidate();
-                    floatingActionButton.setImageResource(R.drawable.ic_navigation_white_48dp);
+                    floatingDirectionButton.setImageResource(R.drawable.ic_navigation_white_48dp);
                 } else {
                     navigate = true;
                     direction(widthMap, lengthMap);
                     canvasMapView.invalidate();
-                    floatingActionButton.setImageResource(R.drawable.ic_pause_circle_filled_white_48dp);
+                    floatingDirectionButton.setImageResource(R.drawable.ic_pause_circle_filled_white_48dp);
                 }
             }
         });
+        floatingSwitchFloor.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Bundle bundle = new Bundle();
+                bundle.putBoolean("navigate", navigate);
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                MapFragment map = new MapFragment();
+                map.setArguments(bundle);
+                transaction.replace(R.id.content_main, map);
+                stopTask = true;
+                transaction.commit();
+            }
+        });
+        if (navigate){
+            if (markers[0] == null){
+                markers = Utils.createListMarker(width, height);
+            }
+            direction(widthMap, lengthMap);
+        }
         return v;
     }
 
@@ -145,6 +169,7 @@ public class MapSearchRoomFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         swipeRefreshLayout = getView().findViewById(R.id.swipeLayout);
+        swipeRefreshLayout.setColorSchemeResources(R.color.Refresh1, R.color.Refresh2, R.color.Refresh3, R.color.Refresh4);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @SuppressLint("ResourceAsColor")
             @Override
