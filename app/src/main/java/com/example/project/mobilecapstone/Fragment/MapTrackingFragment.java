@@ -177,6 +177,8 @@ public class MapTrackingFragment extends Fragment {
                         public void onClick(View view) {
                             time = picker.getValue();
                             new getDevicePath().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                            dialog.dismiss();
+                            fab.setImageResource(R.drawable.ic_close_white_48dp);
                         }
                     });
                     btn_cancel.setOnClickListener(new View.OnClickListener() {
@@ -196,6 +198,7 @@ public class MapTrackingFragment extends Fragment {
                     fab.setImageResource(R.drawable.ic_close_white_48dp);
                 } else {
                     canvasMapView.invalidate();
+                    posList = null;
                     fab.setImageResource(R.drawable.ic_near_me_white_48dp);
                 }
             }
@@ -762,6 +765,7 @@ public class MapTrackingFragment extends Fragment {
             }
             if (total == 0) {
                 Toast.makeText(getActivity(), "Không có dữ liệu của thiết bị trong thời gian này !", Toast.LENGTH_SHORT).show();
+                fab.setImageResource(R.drawable.ic_near_me_white_48dp);
             } else {
                 canvasMapView.invalidate();
             }
