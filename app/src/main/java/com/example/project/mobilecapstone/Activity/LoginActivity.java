@@ -112,30 +112,32 @@ public class LoginActivity extends AppCompatActivity {
             device.setIMEI(imeiDevice);
             Log.e(TAG, "DeviceIMEI: -" + imeiDevice + "---" + device.getIMEI());
         } else {
-            requestPermission(Manifest.permission.READ_PHONE_STATE, 1);
+            requestPermission();
         }
-        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-        } else {
-            requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, 2);
-        }
-        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-        } else {
-            requestPermission(Manifest.permission.ACCESS_COARSE_LOCATION, 3);
-        }
-
-        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED) {
-        } else {
-            requestPermission(Manifest.permission.INTERNET, 4);
-        }
-
-        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-        } else {
-            requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, 5);
-        }
+//        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+//        } else {
+//            requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, 2);
+//        }
+//        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+//        } else {
+//            requestPermission(Manifest.permission.ACCESS_COARSE_LOCATION, 3);
+//        }
+//
+//        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED) {
+//        } else {
+//            requestPermission(Manifest.permission.INTERNET, 4);
+//        }
+//
+//        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+//        } else {
+//            requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, 5);
+//        }
     }
 
-    private void requestPermission(String permission, int requestCode) {
-        ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
+    private void requestPermission() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET}, 1);
     }
 
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
