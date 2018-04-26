@@ -221,7 +221,7 @@ public class LoginActivity extends AppCompatActivity {
             try {
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     Toast.makeText(LoginActivity.this, "Xin chào!", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(LoginActivity.this, LoginActivity.class);
+                    Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                     intent.putExtra("Username", username);
                     JSONObject obj = new JSONObject(responseOutput.toString());
                     intent.putExtra("Fullname", obj.getString("Fullname"));
