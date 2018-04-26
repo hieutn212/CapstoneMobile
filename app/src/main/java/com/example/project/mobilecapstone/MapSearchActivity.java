@@ -40,7 +40,7 @@ public class MapSearchActivity extends AppCompatActivity {
     String roomName = null;
     int buildingId = 0;
     ListView lstView;
-    Room[] lstSource = null;
+    List<Room> lstSource = new ArrayList<>();
     String[] lstName = null;
     private static final String TAG = "MapSearchActivity";
 
@@ -79,21 +79,24 @@ public class MapSearchActivity extends AppCompatActivity {
                 roomName = query;
                 buildingId = 1;
                 new getRoom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
+                List<Room> lstSourceSearch = new ArrayList<>();
                 if (newText != null && !newText.isEmpty()) {
                     List<String> lstFound = new ArrayList();
                     for (Room r : lstSource) {
-                        if (r.getName().contains(newText))
+                        if (r.getName().contains(newText)) {
                             lstFound.add(r.getName());
+                            lstSourceSearch.add(r);
+                        }
                     }
 
                     ArrayAdapter adapter = new ArrayAdapter(MapSearchActivity.this, android.R.layout.simple_list_item_1, lstFound);
                     lstView.setAdapter(adapter);
+                    lstSource = lstSourceSearch;
                 } else {
                     //if search text is null
                     //return default
@@ -198,9 +201,9 @@ public class MapSearchActivity extends AppCompatActivity {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     Intent intent = new Intent();
-                    intent.putExtra("Floor", lstSource[position].getFloor());
-                    intent.putExtra("Width", lstSource[position].getWidth());
-                    intent.putExtra("Length", lstSource[position].getLength());
+                    intent.putExtra("Floor", lstSource.get(position).getFloor());
+                    intent.putExtra("Width", lstSource.get(position).getWidth());
+                    intent.putExtra("Length", lstSource.get(position).getLength());
                     setResult(1, intent);
                     MapSearchActivity.this.finish();
                     /*new getRoom().execute();*/
@@ -213,7 +216,6 @@ public class MapSearchActivity extends AppCompatActivity {
         try {
             JSONArray list = new JSONArray(json);
             int total = list.length();
-            lstSource = new Room[total];
             lstName = new String[total];
             for (int i = 0; i < total; i++) {
                 JSONObject jsonObject = new JSONObject(list.get(i).toString());
@@ -221,7 +223,7 @@ public class MapSearchActivity extends AppCompatActivity {
                         jsonObject.getInt("Floor"), jsonObject.getDouble("Length"),
                         jsonObject.getDouble("Width"), jsonObject.getInt("MapId"),
                         jsonObject.getDouble("Longitude"), jsonObject.getDouble("Latitude"));
-                lstSource[i] = newRoom;
+                lstSource.add(newRoom);
                 lstName[i] = jsonObject.getString("Name");
             }
         } catch (JSONException e) {

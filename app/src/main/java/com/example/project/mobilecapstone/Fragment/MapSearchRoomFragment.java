@@ -222,10 +222,10 @@ public class MapSearchRoomFragment extends Fragment {
                         mapId = object.getInt("Id");
                         String sharePreferenceString = sharedPreference.getString("LASTFLOOR", "");
                         if (sharePreferenceString != "" && currentFloor == Integer.parseInt(sharedPreference.getString("LASTFLOOR", ""))) {
-                            String roomJson = sharedPreference.getString("ROOMLIST", null);
+//                            String roomJson = sharedPreference.getString("ROOMLIST", null);
                             String cornerJson = sharedPreference.getString("CORNERLIST", null);
                             convertToCornerArray(cornerJson);
-                            convertToRoomArray(roomJson);
+//                            convertToRoomArray(roomJson);
                         } else {
                             new MapSearchRoomFragment.initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mapId);
                             editor.putString("LASTFLOOR", currentFloor + "").apply();

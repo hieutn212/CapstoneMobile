@@ -62,14 +62,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         txtUsername = findViewById(R.id.input_username);
         txtPassword = findViewById(R.id.input_password);
-        //check state permission
-        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            getImeiDevice();
-            device.setIMEI(imeiDevice);
-            Log.e(TAG, "DeviceIMEI: -" + imeiDevice + "---" + device.getIMEI());
-        } else {
-            requestReadPhoneStatePermission();
-        }
+
         btn_ip = LoginActivity.this.findViewById(R.id.btn_login);
         btn_ip.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -105,31 +98,44 @@ public class LoginActivity extends AppCompatActivity {
         Display display = getWindowManager().getDefaultDisplay();
         sharedData.width = display.getWidth();
         sharedData.height = display.getHeight() - 240;
-
+        checkPermissions();
         new CreatePosition(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         Intent intent = new Intent(this, PositionService.class);
         startService(intent);
     }
 
-    private void requestReadPhoneStatePermission() {
-        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_PHONE_STATE)) {
-            new AlertDialog.Builder(this).setTitle("Permission needed")
-                    .setMessage("This permission is needed for the functions to work")
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            ActivityCompat.requestPermissions(LoginActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 3);
-                        }
-                    })
-                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
-                        }
-                    }).create().show();
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void checkPermissions() {
+        //check state permission
+        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+            getImeiDevice();
+            device.setIMEI(imeiDevice);
+            Log.e(TAG, "DeviceIMEI: -" + imeiDevice + "---" + device.getIMEI());
         } else {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, 3);
+            requestPermission(Manifest.permission.READ_PHONE_STATE, 1);
         }
+        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        } else {
+            requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, 2);
+        }
+        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        } else {
+            requestPermission(Manifest.permission.ACCESS_COARSE_LOCATION, 3);
+        }
+
+        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED) {
+        } else {
+            requestPermission(Manifest.permission.INTERNET, 4);
+        }
+
+        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        } else {
+            requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, 5);
+        }
+    }
+
+    private void requestPermission(String permission, int requestCode) {
+        ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
     }
 
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -149,7 +155,7 @@ public class LoginActivity extends AppCompatActivity {
 
     public void LoginCheck() {
         //TODO: check login before switch activity
-        //Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+        //Intent intent = new Intent(LoginActivity.this, LoginActivity.class);
         //LoginActivity.this.startActivity(intent);
         new CheckLogin().execute();
     }
@@ -187,7 +193,7 @@ public class LoginActivity extends AppCompatActivity {
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 responseCode = connection.getResponseCode();
-                Log.e(TAG, "doInBackground: "+responseOutput );
+                Log.e(TAG, "doInBackground: " + responseOutput);
                 final StringBuilder output = new StringBuilder("Request URL " + url);
                 output.append(System.getProperty("line.separator") + "Response Code " + responseCode);
                 output.append(System.getProperty("line.separator") + "Type " + "GET");
@@ -215,12 +221,12 @@ public class LoginActivity extends AppCompatActivity {
             try {
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     Toast.makeText(LoginActivity.this, "Xin chào!", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                    Intent intent = new Intent(LoginActivity.this, LoginActivity.class);
                     intent.putExtra("Username", username);
                     JSONObject obj = new JSONObject(responseOutput.toString());
                     intent.putExtra("Fullname", obj.getString("Fullname"));
                     intent.putExtra("Id", obj.getString("Id").toString());
-                    intent.putExtra("packType",obj.getString("PackageId"));
+                    intent.putExtra("packType", obj.getString("PackageId"));
                     startActivity(intent);
                     //prevent going back by press back button
                     finish();
@@ -242,7 +248,7 @@ public class LoginActivity extends AppCompatActivity {
                 }
 
             } catch (JSONException e) {
-                Log.e(TAG, "onPostExecute: LOGIN", e );
+                Log.e(TAG, "onPostExecute: LOGIN", e);
                 e.printStackTrace();
             }
         }

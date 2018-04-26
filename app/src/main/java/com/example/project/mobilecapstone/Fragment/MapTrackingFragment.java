@@ -107,7 +107,6 @@ public class MapTrackingFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         downloadManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
         sharedPreference = getActivity().getSharedPreferences("ROOM_CORNER_INFO", getActivity().MODE_PRIVATE);
         editor = sharedPreference.edit();
@@ -326,7 +325,6 @@ public class MapTrackingFragment extends Fragment {
                                 if (directionPoints.size() > 1) {
                                     mPaint.setStrokeWidth(10);
                                     Random random = new Random();
-
                                     int color = Color.argb(255, random.nextInt(256), random.nextInt(256), random.nextInt(256));
 
                                     mPaint.setColor(color);

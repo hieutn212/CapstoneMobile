@@ -1,12 +1,15 @@
 package com.example.project.mobilecapstone.Fragment;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.DownloadManager;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -19,11 +22,14 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
+import android.text.Layout;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,6 +37,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.project.mobilecapstone.Activity.HomeActivity;
@@ -63,7 +70,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class MapFragment extends Fragment implements View.OnClickListener {
 
-    public boolean stopTask = false;
+    public boolean stopTask = true;
     GPSRouter gps;
     static double latitude;
     static double longitude;
@@ -88,12 +95,14 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     CanvasMapView canvasMapView;
     boolean reDraw = false;
     View v;
+    boolean downloadCompleted = true;
     Button btnSearch;
     private static final int REQUEST_CODE_ROOM = 0x9345;
     Fragment fragment;
     private String result = "";
     boolean first = true;
     int checkFloor = 0;
+    ProgressBar progressBar;
     int countChangeFloor = 0;
     int getFloor = -1;
     FloatingActionButton floatingDirectionButton;
@@ -118,7 +127,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Bundle bundle = this.getArguments();
-        if (bundle != null){
+        if (bundle != null) {
             navigate = bundle.getBoolean("navigate");
         }
         downloadManager = (DownloadManager) getActivity().getSystemService(Context.DOWNLOAD_SERVICE);
@@ -132,9 +141,11 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         v = inflater.inflate(R.layout.fragment_map, container, false);
         //assign text view
         btnSearch = v.findViewById(R.id.buttonSearch);
+        Activity activity = getActivity();
+        progressBar = activity.findViewById(R.id.progressBar);
         btnSearch.setOnClickListener(this);
-        floatingDirectionButton = getActivity().findViewById(R.id.navigation);
-        floatingSwitchFloorButton = getActivity().findViewById(R.id.switch_floor);
+        floatingDirectionButton = activity.findViewById(R.id.navigation);
+        floatingSwitchFloorButton = activity.findViewById(R.id.switch_floor);
         floatingDirectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -279,25 +290,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        new CanvasAsyncTask(MapFragment.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        new CanvasReDraw().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
-        swipeRefreshLayout = getView().findViewById(R.id.swipeLayout);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @SuppressLint("ResourceAsColor")
-            @Override
-            public void onRefresh() {
-                swipeRefreshLayout.setColorSchemeResources(R.color.Refresh1, R.color.Refresh2, R.color.Refresh3, R.color.Refresh4);
-                swipeRefreshLayout.setRefreshing(true);
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        swipeRefreshLayout.setRefreshing(false);
-                        canvasMapView.invalidate();
-                    }
-                }, 1000);
-            }
-        });
     }
 
 
@@ -500,7 +493,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     }
 
     public static void getPointMap(double latitude, double longitude) {
-
         int corner = 1;
         double min = Utils.PerpendicularDistance(corners[0], corners[1], longitude, latitude);
         double perpendicular = Utils.PerpendicularDistance(corners[1], corners[2], longitude, latitude);
@@ -878,12 +870,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     }
 
     public class CanvasAsyncTask extends AsyncTask<Void, Double, Void> {
-
-        private MapFragment fragment;
-
-        public CanvasAsyncTask(MapFragment fragment) {
-            this.fragment = fragment;
-        }
 //        private Activity activity;
 //        public CanvasAsyTask(Activity activity) {
 //            this.activity = activity;
@@ -939,6 +925,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+
+
     public class GetListMap extends AsyncTask<String, Void, String> {
         @Override
         protected void onPreExecute() {
@@ -969,21 +957,18 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                         dir.mkdir();
                     }
                     for (int i = 0; i < listMap.size(); i++) {
-                        String urlMap = "http://" + sharedData.IP + "/" + new JSONObject(listMap.get(i)).getString("MapUrl");
-                        String nameMap = new JSONObject(listMap.get(i)).getString("Name");
-
+                        JSONObject object = new JSONObject(listMap.get(i));
+                        String urlMap = "http://" + sharedData.IP + "/" + object.getString("MapUrl");
+                        String nameMap = object.getString("Name");
                         //log 4 test
                         Log.e(TAG, "doInBackground: PATH CHECK" + sharedData.storage + nameMap);
-
                         File checkFile = new File(sharedData.storage + nameMap + ".png");
                         if (!checkFile.exists()) {
+                            downloadCompleted = false;
+                            new checkDownloadCompleted().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                             DownloadMap(urlMap, nameMap);
                         }
                     }
-                }
-                if (responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
-                    Toast.makeText(getContext(), "Có lỗi xảy ra!", Toast.LENGTH_SHORT).show();
-
                 }
             } catch (MalformedURLException e) {
                 Log.e(TAG, "doInBackground: GetListMap", e);
@@ -997,12 +982,105 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         }
 
         @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+            Toast.makeText(getContext(), "Đang tải map", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
         protected void onPostExecute(String s) {
-            FrameLayout layout = v.findViewById(R.id.canvasView);
-            canvasMapView = new CanvasMapView(getContext());
-            canvasMapView.setId(R.id.viewCanvas);
-            layout.addView(canvasMapView);
-            stopTask = false;
+            if (downloadCompleted) {
+                FrameLayout layout = v.findViewById(R.id.canvasView);
+                canvasMapView = new CanvasMapView(getContext());
+                canvasMapView.setId(R.id.viewCanvas);
+                layout.addView(canvasMapView);
+                stopTask = false;
+                new CanvasAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new CanvasReDraw().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+                swipeRefreshLayout = getView().findViewById(R.id.swipeLayout);
+                swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                    @SuppressLint("ResourceAsColor")
+                    @Override
+                    public void onRefresh() {
+                        swipeRefreshLayout.setColorSchemeResources(R.color.Refresh1, R.color.Refresh2, R.color.Refresh3, R.color.Refresh4);
+                        swipeRefreshLayout.setRefreshing(true);
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                swipeRefreshLayout.setRefreshing(false);
+                                canvasMapView.invalidate();
+                            }
+                        }, 1000);
+                    }
+                });
+                progressBar.setVisibility(View.INVISIBLE);
+            } else {
+                progressBar.setVisibility(View.VISIBLE);
+                Toast.makeText(getContext(), "Đang tải map!!! Vui lòng chờ ít phút!!!", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    public class checkDownloadCompleted extends AsyncTask<String, Void, String> {
+        @Override
+        protected void onPreExecute() {
+            buildingId = 1;
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                for (int i = 0; i < listMap.size(); i++) {
+                    JSONObject object = new JSONObject(listMap.get(i));
+                    String nameMap = object.getString("Name");
+                    File checkFile = new File(sharedData.storage + nameMap + ".png");
+                    if (!checkFile.exists()) {
+                        downloadCompleted = false;
+                        break;
+                    } else if (checkFile.exists() && i == (listMap.size() - 1)) {
+                        downloadCompleted = true;
+                    }
+                }
+            } catch (JSONException e) {
+                Log.e(TAG, "doInBackground: GetListMap", e);
+            }
+            result = "Finish";
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if (downloadCompleted) {
+                Toast.makeText(getContext(), "Tải map hoàn tất", Toast.LENGTH_SHORT).show();
+                FrameLayout layout = v.findViewById(R.id.canvasView);
+                canvasMapView = new CanvasMapView(getContext());
+                canvasMapView.setId(R.id.viewCanvas);
+                layout.addView(canvasMapView);
+                stopTask = false;
+                new CanvasAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new CanvasReDraw().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+                swipeRefreshLayout = getView().findViewById(R.id.swipeLayout);
+                swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                    @SuppressLint("ResourceAsColor")
+                    @Override
+                    public void onRefresh() {
+                        swipeRefreshLayout.setColorSchemeResources(R.color.Refresh1, R.color.Refresh2, R.color.Refresh3, R.color.Refresh4);
+                        swipeRefreshLayout.setRefreshing(true);
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                swipeRefreshLayout.setRefreshing(false);
+                                canvasMapView.invalidate();
+                            }
+                        }, 1000);
+                    }
+                });
+            } else {
+                new checkDownloadCompleted().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            }
         }
     }
 
