@@ -1,6 +1,7 @@
 package com.example.project.mobilecapstone.Fragment;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -67,6 +68,9 @@ public class TrackingFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_tracking, container, false);
         //return inflater.inflate(R.layout.fragment_tracking, container, false);
         new GetListDevice().execute();
+        Activity activity = getActivity();
+        activity.findViewById(R.id.navigation).setVisibility(View.INVISIBLE);
+        activity.findViewById(R.id.switch_floor).setVisibility(View.INVISIBLE);
         return rootView;
     }
 

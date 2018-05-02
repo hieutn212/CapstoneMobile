@@ -141,6 +141,12 @@ public class MapSearchRoomFragment extends Fragment {
             public void onClick(View view) {
                 Bundle bundle = new Bundle();
                 bundle.putBoolean("navigate", navigate);
+                bundle.putFloat("PosX", posX);
+                bundle.putFloat("PosY", posY);
+                bundle.putFloat("WidthMap", widthMap);
+                bundle.putFloat("LengthMap", lengthMap);
+                bundle.putInt("Floor", currentFloor);
+                bundle.putInt("Stairs", stairsGo);
                 FragmentTransaction transaction = fragmentManager.beginTransaction();
                 MapFragment map = new MapFragment();
                 map.setArguments(bundle);

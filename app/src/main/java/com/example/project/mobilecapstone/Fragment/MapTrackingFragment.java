@@ -1,6 +1,7 @@
 package com.example.project.mobilecapstone.Fragment;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.DownloadManager;
 import android.content.Context;
@@ -117,6 +118,7 @@ public class MapTrackingFragment extends Fragment {
         // Inflate the layout for this fragment
         v = inflater.inflate(R.layout.fragment_trackingmap, container, false);
         /*setHasOptionsMenu(true);*/
+
         return v;
     }
 
@@ -302,7 +304,8 @@ public class MapTrackingFragment extends Fragment {
             if (first == false) {
                 getPointMap(latitude, longitude);
                 if (posX != 0 || posY != 0) {
-                    mPaint.setColor(Color.BLUE);
+                    mPaint.setColor(Color.GREEN);
+                    mPaint.setStrokeWidth(30);
                     canvas.drawCircle(posX, posY, 10, mPaint);
                 }
                 float widthMap = posX;
@@ -319,6 +322,12 @@ public class MapTrackingFragment extends Fragment {
                             getPointMap(latitude, longitude);
                             if (posX != 0 || posY != 0) {
                                 mPaint.setColor(Color.BLUE);
+                                mPaint.setStrokeWidth(15);
+                                mPaint.setAlpha(50);
+                                if (i == 1) {
+                                    mPaint.setAlpha(100);
+                                }
+
                                 canvas.drawCircle(posX, posY, 10, mPaint);
                             }
 
@@ -327,12 +336,15 @@ public class MapTrackingFragment extends Fragment {
                                 int sizeDirection = directionPoints.size();
                                 if (directionPoints.size() > 1) {
                                     mPaint.setStrokeWidth(10);
+                                    mPaint.setAlpha(30);
                                     Random random = new Random();
                                     int color = Color.argb(255, random.nextInt(256), random.nextInt(256), random.nextInt(256));
 
                                     mPaint.setColor(color);
 
                                     for (int j = 0; j < sizeDirection - 1; j++) {
+                                        mPaint.setColor(Color.BLUE);
+
                                         DirectionPoint point1 = directionPoints.get(j);
                                         DirectionPoint point2 = directionPoints.get(j + 1);
                                         canvas.drawLine(point1.getPosX(), point1.getPosY(), point2.getPosX(), point2.getPosY(), mPaint);

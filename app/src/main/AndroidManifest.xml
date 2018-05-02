@@ -64,6 +64,11 @@
             android:name=".Utils.TrackingService"
             android:enabled="true"
             android:exported="false"/>
+
+        <service
+            android:name=".Fragment.MapFragment$CanvasService"
+            android:enabled="true"
+            android:exported="false"/>
     </application>
 
 </manifest>
