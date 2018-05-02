@@ -336,15 +336,13 @@ public class MapTrackingFragment extends Fragment {
                                 int sizeDirection = directionPoints.size();
                                 if (directionPoints.size() > 1) {
                                     mPaint.setStrokeWidth(10);
-                                    mPaint.setAlpha(30);
                                     Random random = new Random();
                                     int color = Color.argb(255, random.nextInt(256), random.nextInt(256), random.nextInt(256));
 
                                     mPaint.setColor(color);
+                                    mPaint.setAlpha(50);
 
                                     for (int j = 0; j < sizeDirection - 1; j++) {
-                                        mPaint.setColor(Color.BLUE);
-
                                         DirectionPoint point1 = directionPoints.get(j);
                                         DirectionPoint point2 = directionPoints.get(j + 1);
                                         canvas.drawLine(point1.getPosX(), point1.getPosY(), point2.getPosX(), point2.getPosY(), mPaint);

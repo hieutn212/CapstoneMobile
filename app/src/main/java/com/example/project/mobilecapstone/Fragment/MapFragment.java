@@ -32,6 +32,7 @@ import android.support.v7.app.AlertDialog;
 import android.text.Layout;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -98,7 +99,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     boolean reDraw = false;
     View v;
     boolean downloadCompleted = true;
-    Button btnSearch;
+    FloatingActionButton btnSearch;
     private static final int REQUEST_CODE_ROOM = 0x9345;
     Fragment fragment;
     private String result = "";
@@ -301,7 +302,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
     }
 
 
@@ -321,8 +321,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
 
         @Override
         protected void onDraw(Canvas canvas) {
+            canvas.save();
             super.onDraw(canvas);
-
             height = getHeight();
             width = getWidth();
 
@@ -366,7 +366,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                                 String cornerJson = sharedPreference.getString("CORNERLIST", null);
                                 if (cornerJson != null && !cornerJson.isEmpty()) {
                                     convertToCornerArray(cornerJson);
-                                }else{
+                                } else {
                                     new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                                 }
 //                                convertToRoomArray(roomJson);
@@ -386,7 +386,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                                 String cornerJson = sharedPreference.getString("CORNERLIST", null);
                                 if (cornerJson != null && !cornerJson.isEmpty()) {
                                     convertToCornerArray(cornerJson);
-                                }else{
+                                } else {
                                     new initListCorner().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                                 }
 //                                convertToRoomArray(roomJson);
@@ -905,6 +905,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException e) {
+                    Log.e(TAG, "CanvasAsyncTask doInBackground: ", e);
                     e.printStackTrace();
                 }
                 publishProgress();
@@ -945,6 +946,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException e) {
+                    Log.e(TAG, "CanvasReDraw doInBackground: ", e);
                     e.printStackTrace();
                 }
             }
