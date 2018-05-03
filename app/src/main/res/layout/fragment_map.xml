@@ -7,22 +7,20 @@
     tools:context="com.example.project.mobilecapstone.Fragment.MapFragment">
 
     <FrameLayout
-        android:id="@+id/canvasView"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        buttonSearch
 
         <android.support.design.widget.FloatingActionButton
-            android:id="@+id/buttonSearch"
+            android:id="@+id/navigation"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="top|end"
+            android:layout_gravity="bottom|start"
             android:layout_margin="@dimen/fab_margin"
             android:clickable="true"
-            android:visibility="visible"
+            android:visibility="invisible"
             app:backgroundTint="@color/colorAccent"
-            app:fabSize="mini"
-            app:srcCompat="@drawable/ic_action_action_search" />
+            app:fabSize="normal"
+            app:srcCompat="@drawable/ic_directions_white_48dp" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/switch_floor"
@@ -37,17 +35,24 @@
             app:srcCompat="@drawable/ic_layers_white_48dp" />
 
         <android.support.design.widget.FloatingActionButton
-            android:id="@+id/navigation"
+            android:id="@+id/buttonSearch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|start"
+            android:layout_gravity="top|end"
             android:layout_margin="@dimen/fab_margin"
             android:clickable="true"
-            android:visibility="invisible"
+            android:visibility="visible"
             app:backgroundTint="@color/colorAccent"
-            app:fabSize="normal"
-            app:srcCompat="@drawable/ic_directions_white_48dp" />
+            app:fabSize="mini"
+            app:srcCompat="@drawable/ic_action_action_search" />
 
+        <FrameLayout
+            android:id="@+id/canvasView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            buttonSearch
+
+        </FrameLayout>
     </FrameLayout>
 
 

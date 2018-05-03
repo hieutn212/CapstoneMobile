@@ -107,6 +107,7 @@ public class MapSearchRoomFragment extends Fragment {
         new MapSearchRoomFragment.GetListMap().execute();
         Bundle bundle = this.getArguments();
         if (bundle != null) {
+            directionPoints.clear();
             posX = bundle.getFloat("PosX");
             posY = bundle.getFloat("PosY");
             widthMap = bundle.getFloat("WidthMap");
@@ -136,6 +137,7 @@ public class MapSearchRoomFragment extends Fragment {
                 }
             }
         });
+
         floatingSwitchFloor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
